@@ -1,0 +1,97 @@
+﻿@page "/login"
+@using MemoDown.Helpers
+@using MemoDown.Options
+@using MemoDown.Validators
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.Extensions.Options
+@using Radzen
+@using System.Security.Claims
+@using System.ComponentModel.DataAnnotations
+
+@inject NavigationManager NavigationManager
+@inject IOptionsSnapshot<Account> _options
+
+<PageTitle>Sign In</PageTitle>
+
+<RadzenCard class="rz-my-12 rz-mx-auto rz-p-4 rz-p-md-12" style="max-width: 600px;">
+    <EditForm method="post" OnValidSubmit="LoginUser" Model="UserCredentials" FormName="LoginUser">
+        <DataAnnotationsValidator />
+        <AccountValidation @ref="accountValidation" />
+        <ValidationSummary />
+
+        <div class="rz-login">
+            <div class="rz-form">
+                <div class="rz-form-row">
+                    <label class="rz-label" for="username">UserName</label>
+                    <div class="rz-form-input-wrapper">
+                        <RadzenTextBox id="username" Name="UserCredentials.UserName" @bind-Value="UserCredentials.UserName" />
+                        @* <ValidationMessage For="@(()=> UserCredentials.UserName)" /> *@
+                    </div>
+                </div>
+                <div class="rz-form-row">
+                    <label class="rz-label" for="password">Password</label>
+                    <div class="rz-form-input-wrapper">
+                        <RadzenPassword id="password" Name="UserCredentials.Password" @bind-Value="UserCredentials.Password" />
+                        @* <ValidationMessage For="@(()=> UserCredentials.Password)" /> *@
+                    </div>
+                </div>
+                <div class="rz-form-row">
+                    <label class="rz-label"></label>
+                    <div class="rz-form-input-wrapper rz-login-buttons">
+                        <RadzenButton ButtonStyle="ButtonStyle.Primary" ButtonType="ButtonType.Submit" Text="Sign In" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</RadzenCard>
+
+@code {
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    public Credentials UserCredentials { get; set; } = new Credentials();
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private AccountValidation? accountValidation;
+
+    public async Task LoginUser()
+    {
+        accountValidation?.ClearErrors();
+
+        var passwordHasher = new PasswordHasher();
+        if (!string.IsNullOrWhiteSpace(_options.Value.Password) &&
+            UserCredentials.UserName == _options.Value.UserName &&
+            passwordHasher.VerifyHashedPassword(_options.Value.Password!, UserCredentials.Password!) == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Success)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(type: ClaimTypes.Name, UserCredentials.UserName!)
+            };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(principal);
+
+            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+        }
+        else
+        {
+            var errors = new Dictionary<string, List<string>>();
+            errors.Add("Account", new() { "UserName or Password is not correct." });
+            accountValidation?.DisplayErrors(errors);
+        }
+    }
+
+    public class Credentials
+    {
+        [Required(ErrorMessage = "UserName is required.")]
+        public string? UserName { get; set; }
+
+        [Required(ErrorMessage = "Password is required.")]
+        public string? Password { get; set; }
+    }
+}
