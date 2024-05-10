@@ -53,7 +53,7 @@
     --rz-panel-menu-item-2nd-level-padding: 0.5rem 0.75rem 0.5rem 1rem;
     --rz-panel-menu-item-2nd-level-margin: 0 0.25rem;
     --rz-panel-menu-item-2nd-level-border-radius: var(--rz-border-radius);
-    --rz-panel-menu-item-2nd-level-offset: 2.75rem;
+    /*--rz-panel-menu-item-2nd-level-offset: 2.75rem;*/
     --rz-panel-menu-item-2nd-level-font-size: var(--rz-body-font-size);
     --rz-panel-menu-item-2nd-level-font-weight: 400;
     --rz-panel-menu-item-2nd-level-color: inherit;
@@ -76,8 +76,9 @@
     --rz-panel-menu-icon-2nd-level-icon-size: var(--rz-icon-size);
     --rz-panel-menu-toggle-icon-font-size: var(--rz-icon-size);
     --rz-panel-menu-toggle-icon-opacity: 1;
-    --rz-panel-menu-item-3rd-level-offset: 3.75rem;
-    --rz-panel-menu-item-4th-level-offset: 4.75rem;
+    --rz-panel-menu-item-2nd-level-offset: 3.2rem;
+    --rz-panel-menu-item-3rd-level-offset: 4rem;
+    --rz-panel-menu-item-4th-level-offset: 4.8rem;
 }
 
 .rz-panel-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-item .rz-navigation-item-link {

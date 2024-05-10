@@ -1,7 +1,7 @@
 ﻿<RadzenStack AlignItems="AlignItems.Center" class="rz-mx-auto h-100">
-    <RadzenPanelMenu Multiple="true" class="rz-scrollbars w-100">
-        <MemoItems Memos="Memo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" RenderChildren="false"/>
-    </RadzenPanelMenu>
+    <MemoPanelMenu class="rz-scrollbars w-100">
+        <MemoItems Memos="Memo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" RenderChildren="false" />
+    </MemoPanelMenu>
 </RadzenStack>
 
 @code {
@@ -38,7 +38,7 @@
     }
 
 
-    public async Task OnMemoItemClick(MenuItemEventArgs args)
+    public async Task OnMemoItemClick(MemoMenuItemEventArgs args)
     {
         var memo = args.Value as MemoItem;
         await SelectionChanged.InvokeAsync(memo);

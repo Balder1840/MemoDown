@@ -4,10 +4,10 @@
     {
         @if (RenderChildren && memo.Children != null && memo.Children.Any())
         {
-            <RadzenPanelMenuItem Value="memo"
-                                 Click="OnClick"
-                                 Selected="@(CurrentMemo?.FullPath == memo.FullPath)"
-                                 Expanded="@(CurrentMemo?.FullPath.StartsWith(memo.FullPath) ?? false)">
+            <MemoPanelMenuItem @ref="children[memo.Id]" Value="memo"
+                               Click="OnClick"
+                               Selected="@(CurrentMemo?.FullPath == memo.FullPath)"
+                               Expanded="IsExpended(memo,CurrentMemo)">
                 <Template>
                     @if (memo.IsDirectory)
                     {
@@ -24,14 +24,13 @@
                     <MemoItems Memos="memo.Children" CurrentMemo="CurrentMemo" OnMenuItemClick="OnClick" OnBtnMoreClick="OnBtnMoreClick"
                                DirectoryOnly="@DirectoryOnly" RenderChildren="@RenderChildren" />
                 </ChildContent>
-            </RadzenPanelMenuItem>
+            </MemoPanelMenuItem>
         }
         else
         {
-            <RadzenPanelMenuItem Value="memo"
-                                 Click="OnClick"
-                                 Selected="@(CurrentMemo?.FullPath == memo.FullPath)"
-                                 Expanded="@(CurrentMemo?.FullPath.StartsWith(memo.FullPath) ?? false)">
+            <MemoPanelMenuItem @ref="children[memo.Id]" Value="memo"
+                               Click="OnClick"
+                               Selected="@(CurrentMemo?.FullPath == memo.FullPath)">
                 <Template>
                     @if (memo.IsDirectory)
                     {
@@ -44,7 +43,7 @@
                     <span class="rz-navigation-item-text">@memo.Name</span>
                     <i class="rzi rz-navigation-item-icon btn-more" @onclick="OnBtnMoreClick" @onclick:stopPropagation>more_horiz</i>
                 </Template>
-            </RadzenPanelMenuItem>
+            </MemoPanelMenuItem>
         }
     }
 }
@@ -60,7 +59,7 @@
     public EventCallback<MouseEventArgs> OnBtnMoreClick { get; set; }
 
     [Parameter]
-    public EventCallback<MenuItemEventArgs> OnMenuItemClick { get; set; }
+    public EventCallback<MemoMenuItemEventArgs> OnMenuItemClick { get; set; }
 
     [Parameter]
     public bool DirectoryOnly { get; set; }
@@ -68,12 +67,33 @@
     [Parameter]
     public bool RenderChildren { get; set; } = true;
 
-    public async Task OnClick(MenuItemEventArgs args)
+    private Dictionary<string, MemoPanelMenuItem> children = new Dictionary<string, MemoPanelMenuItem>();
+
+    public async Task OnClick(MemoMenuItemEventArgs args)
     {
         var memo = args.Value as MemoItem;
         if (OnMenuItemClick.HasDelegate && CurrentMemo?.Id != memo?.Id)
         {
             await OnMenuItemClick.InvokeAsync(args);
+        }
+    }
+
+    private bool IsExpended(MemoItem memo, MemoItem? currentMemo)
+    {
+        if (!children.ContainsKey(memo.Id))
+        {
+            return CurrentMemo?.FullPath.StartsWith(memo.FullPath) ?? false;
+        }
+
+        // keep expanded menu as it is
+        var child = children[memo.Id];
+        if (!child.Expanded)
+        {
+            return CurrentMemo?.FullPath.StartsWith(memo.FullPath) ?? false;
+        }
+        else
+        {
+            return true;
         }
     }
 }

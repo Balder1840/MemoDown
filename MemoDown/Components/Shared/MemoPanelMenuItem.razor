@@ -1,0 +1,70 @@
+﻿@* https://github.com/radzenhq/radzen-blazor/blob/master/Radzen.Blazor/RadzenPanelMenuItem.razor *@
+@* changed to use arrow to toggle menu only *@
+@using Microsoft.AspNetCore.Components.Routing
+@inject NavigationManager UriHelper
+@inherits RadzenComponent
+@if (Visible)
+{
+    <li @ref="@Element" id="@GetId()" style="@Style" @attributes="Attributes" class="@GetItemCssClass()" @onclick="@OnClick" @onclick:stopPropagation>
+        <div class=@(Selected ? "rz-navigation-item-wrapper rz-navigation-item-wrapper-active" : "rz-navigation-item-wrapper") style="margin-right:0px">
+            @if (Path != null)
+            {
+                <NavLink tabindex="-1" target="@Target" class=@(Selected ? "rz-navigation-item-link rz-navigation-item-link-active" : "rz-navigation-item-link") style="@(Parent?.DisplayStyle == MenuItemDisplayStyle.Icon?"margin-right:0px;":"")" href="@Path" Match="@Match">
+                    @if (!string.IsNullOrEmpty(Icon) && (Parent?.DisplayStyle == MenuItemDisplayStyle.Icon || Parent?.DisplayStyle == MenuItemDisplayStyle.IconAndText))
+                    {
+                        <i class="rzi rz-navigation-item-icon" style="@getIconStyle()">@((MarkupString)Icon)</i>
+                    }
+                    @if (!string.IsNullOrEmpty(Image) && (Parent?.DisplayStyle == MenuItemDisplayStyle.Icon || Parent?.DisplayStyle == MenuItemDisplayStyle.IconAndText))
+                    {
+                        <img class="rz-navigation-item-icon" src="@Image" alt=@ImageAlternateText />
+                    }
+                    @if (Template != null)
+                    {
+                        @Template
+                    }
+                    else if (Parent?.DisplayStyle == MenuItemDisplayStyle.Text || Parent?.DisplayStyle == MenuItemDisplayStyle.IconAndText)
+                    {
+                        <span class="rz-navigation-item-text" @onclick="@Toggle">@Text</span>
+                    }
+                    @if (items.Any() && Parent?.ShowArrow == true)
+                    {
+                        <i class="rzi rz-navigation-item-icon-children" style="@getStyle()" @onclick="@Toggle" @onclick:preventDefault>keyboard_arrow_down</i>
+                    }
+                </NavLink>
+            }
+            else
+            {
+                <div class="rz-navigation-item-link" style="@(Parent?.DisplayStyle == MenuItemDisplayStyle.Icon?"margin-right:0px;":"")" >
+                    @if (!string.IsNullOrEmpty(Icon) && (Parent?.DisplayStyle == MenuItemDisplayStyle.Icon || Parent?.DisplayStyle == MenuItemDisplayStyle.IconAndText))
+                    {
+                        <i class="rzi rz-navigation-item-icon" style="@getIconStyle()">@((MarkupString)Icon)</i>
+                    }
+                    @if (!string.IsNullOrEmpty(Image) && (Parent?.DisplayStyle == MenuItemDisplayStyle.Icon || Parent?.DisplayStyle == MenuItemDisplayStyle.IconAndText))
+                    {
+                        <img class="rz-navigation-item-icon" src="@Image" alt=@ImageAlternateText />
+                    }
+                    @if (Template != null)
+                    {
+                        @Template
+                    }
+                    else if (Parent?.DisplayStyle == MenuItemDisplayStyle.Text || Parent?.DisplayStyle == MenuItemDisplayStyle.IconAndText)
+                    {
+                        <span class="rz-navigation-item-text">@Text</span>
+                    }
+                    @if (items.Any() && Parent?.ShowArrow == true)
+                    {
+                        <i class="rzi rz-navigation-item-icon-children" style="@getStyle()" @onclick="@Toggle" @onclick:stopPropagation>keyboard_arrow_down</i>
+                    }
+                </div>
+            }
+        </div>
+        @if (ChildContent != null)
+        {
+            <ul class="rz-navigation-menu" style="@getItemStyle()">
+                <CascadingValue Value=this>
+                    @ChildContent
+                </CascadingValue>
+            </ul>
+        }
+    </li>
+}

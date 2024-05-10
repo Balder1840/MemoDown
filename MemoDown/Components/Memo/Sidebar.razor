@@ -5,9 +5,9 @@
         </div>
         <RadzenButton Text="New" Icon="add" class="btn-add" />
 
-        <RadzenPanelMenu Multiple="true" class="rz-scrollbars w-100">
+        <MemoPanelMenu Multiple="true" class="rz-scrollbars w-100">
             <MemoItems Memos="RootMemo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" DirectoryOnly="true" />
-        </RadzenPanelMenu>
+        </MemoPanelMenu>
     </RadzenStack>
 </sidebar>
 
@@ -21,7 +21,7 @@
     [Parameter]
     public EventCallback<MemoItem?> SelectionChanged { get; set; }
 
-    public async Task OnMemoItemClick(MenuItemEventArgs args)
+    public async Task OnMemoItemClick(MemoMenuItemEventArgs args)
     {
         var memo = args.Value as MemoItem;
         await SelectionChanged.InvokeAsync(memo);
