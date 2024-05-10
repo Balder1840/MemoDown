@@ -1,8 +1,8 @@
-﻿@if (Memo != null && Memo.Children != null && Memo.Children.Any())
+﻿@if (Memos != null && Memos.Any())
 {
-    @foreach (var memo in Memo.Children.Where(m => !DirectoryOnly || m.IsDirectory))
+    @foreach (var memo in Memos.Where(m => !DirectoryOnly || m.IsDirectory))
     {
-        @if (memo.Children != null && memo.Children.Any())
+        @if (RenderChildren && memo.Children != null && memo.Children.Any())
         {
             <RadzenPanelMenuItem Value="memo"
                                  Click="OnClick"
@@ -21,7 +21,8 @@
                     <i class="rzi rz-navigation-item-icon btn-more" @onclick="OnBtnMoreClick" @onclick:stopPropagation>more_horiz</i>
                 </Template>
                 <ChildContent>
-                    <MemoItems Memo="memo" CurrentMemo="CurrentMemo" OnMenuItemClick="OnClick" OnBtnMoreClick="OnBtnMoreClick" DirectoryOnly="@DirectoryOnly" />
+                    <MemoItems Memos="memo.Children" CurrentMemo="CurrentMemo" OnMenuItemClick="OnClick" OnBtnMoreClick="OnBtnMoreClick"
+                               DirectoryOnly="@DirectoryOnly" RenderChildren="@RenderChildren" />
                 </ChildContent>
             </RadzenPanelMenuItem>
         }
@@ -50,7 +51,7 @@
 
 @code {
     [Parameter]
-    public MemoItem? Memo { get; set; }
+    public IEnumerable<MemoItem>? Memos { get; set; }
 
     [Parameter]
     public MemoItem? CurrentMemo { get; set; }
@@ -63,6 +64,9 @@
 
     [Parameter]
     public bool DirectoryOnly { get; set; }
+
+    [Parameter]
+    public bool RenderChildren { get; set; } = true;
 
     public async Task OnClick(MenuItemEventArgs args)
     {

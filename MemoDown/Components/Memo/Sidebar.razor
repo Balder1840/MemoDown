@@ -6,7 +6,7 @@
         <RadzenButton Text="New" Icon="add" class="btn-add" />
 
         <RadzenPanelMenu Multiple="true" class="rz-scrollbars w-100">
-            <MemoItems Memo="RootMemo" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" DirectoryOnly="true" />
+            <MemoItems Memos="RootMemo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" DirectoryOnly="true" />
         </RadzenPanelMenu>
     </RadzenStack>
 </sidebar>

@@ -1,6 +1,6 @@
 ﻿<RadzenStack AlignItems="AlignItems.Center" class="rz-mx-auto h-100">
-    <RadzenPanelMenu Multiple="true" ShowArrow="false" class="rz-scrollbars w-100">
-        <MemoItems Memo="Memo" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" />
+    <RadzenPanelMenu Multiple="true" class="rz-scrollbars w-100">
+        <MemoItems Memos="Memo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" RenderChildren="false"/>
     </RadzenPanelMenu>
 </RadzenStack>
 
