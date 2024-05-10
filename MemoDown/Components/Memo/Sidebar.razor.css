@@ -1,0 +1,11 @@
+﻿.avatar ::deep img {
+    width: 52px;
+    height: 100%;
+    border-radius: 50%;
+    cursor: pointer;
+    -webkit-user-drag: none;
+}
+
+::deep .btn-add {
+    min-width: 100px;
+}

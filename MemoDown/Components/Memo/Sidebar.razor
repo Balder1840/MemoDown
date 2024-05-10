@@ -1,0 +1,34 @@
+﻿<sidebar>
+    <RadzenStack AlignItems="AlignItems.Center" class="rz-mx-auto h-100">
+        <div class="avatar rz-mt-8">
+            <RadzenImage Path="/images/avatar.jpg" />
+        </div>
+        <RadzenButton Text="New" Icon="add" class="btn-add" />
+
+        <RadzenPanelMenu Multiple="true" class="rz-scrollbars w-100">
+            <MemoItems Memo="RootMemo" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" DirectoryOnly="true" />
+        </RadzenPanelMenu>
+    </RadzenStack>
+</sidebar>
+
+@code {
+    [CascadingParameter]
+    public MemoItem? RootMemo { get; set; }
+
+    [Parameter]
+    public MemoItem? Selection { get; set; }
+
+    [Parameter]
+    public EventCallback<MemoItem?> SelectionChanged { get; set; }
+
+    public async Task OnMemoItemClick(MenuItemEventArgs args)
+    {
+        var memo = args.Value as MemoItem;
+        await SelectionChanged.InvokeAsync(memo);
+    }
+
+    void OnMoreClick(MouseEventArgs args)
+    {
+
+    }
+}

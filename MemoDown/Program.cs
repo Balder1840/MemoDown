@@ -1,5 +1,7 @@
 using MemoDown.Components;
 using MemoDown.Options;
+using MemoDown.Services;
+using MemoDown.Store;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +39,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 //});
 builder.Services.AddRadzenComponents();
 
-builder.Services.AddOptions<Account>().BindConfiguration(nameof(Account));
+builder.Services.AddSingleton<MemoStore>();
+builder.Services.AddHostedService<MemoStoreInitializeService>();
+builder.Services.AddSingleton<MemoService>();
+
+builder.Services.AddOptions<AccountOptions>().BindConfiguration("Account");
+builder.Services.AddOptions<MemoDownOptions>().BindConfiguration("MemoDown");
 
 var app = builder.Build();
 

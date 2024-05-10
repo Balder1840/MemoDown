@@ -1,0 +1,75 @@
+﻿@if (Memo != null && Memo.Children != null && Memo.Children.Any())
+{
+    @foreach (var memo in Memo.Children.Where(m => !DirectoryOnly || m.IsDirectory))
+    {
+        @if (memo.Children != null && memo.Children.Any())
+        {
+            <RadzenPanelMenuItem Value="memo"
+                                 Click="OnClick"
+                                 Selected="@(CurrentMemo?.FullPath == memo.FullPath)"
+                                 Expanded="@(CurrentMemo?.FullPath.StartsWith(memo.FullPath) ?? false)">
+                <Template>
+                    @if (memo.IsDirectory)
+                    {
+                        <i class="rzi rz-navigation-item-icon">folder</i>
+                    }
+                    else
+                    {
+                        <img class="rz-navigation-item-icon" src="/images/markdown_20x20.png" alt="md" />
+                    }
+                    <span class="rz-navigation-item-text">@memo.Name</span>
+                    <i class="rzi rz-navigation-item-icon btn-more" @onclick="OnBtnMoreClick" @onclick:stopPropagation>more_horiz</i>
+                </Template>
+                <ChildContent>
+                    <MemoItems Memo="memo" CurrentMemo="CurrentMemo" OnMenuItemClick="OnClick" OnBtnMoreClick="OnBtnMoreClick" DirectoryOnly="@DirectoryOnly" />
+                </ChildContent>
+            </RadzenPanelMenuItem>
+        }
+        else
+        {
+            <RadzenPanelMenuItem Value="memo"
+                                 Click="OnClick"
+                                 Selected="@(CurrentMemo?.FullPath == memo.FullPath)"
+                                 Expanded="@(CurrentMemo?.FullPath.StartsWith(memo.FullPath) ?? false)">
+                <Template>
+                    @if (memo.IsDirectory)
+                    {
+                        <i class="rzi rz-navigation-item-icon">folder</i>
+                    }
+                    else
+                    {
+                        <img class="rz-navigation-item-icon" src="/images/markdown_20x20.png" alt="md" />
+                    }
+                    <span class="rz-navigation-item-text">@memo.Name</span>
+                    <i class="rzi rz-navigation-item-icon btn-more" @onclick="OnBtnMoreClick" @onclick:stopPropagation>more_horiz</i>
+                </Template>
+            </RadzenPanelMenuItem>
+        }
+    }
+}
+
+@code {
+    [Parameter]
+    public MemoItem? Memo { get; set; }
+
+    [Parameter]
+    public MemoItem? CurrentMemo { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnBtnMoreClick { get; set; }
+
+    [Parameter]
+    public EventCallback<MenuItemEventArgs> OnMenuItemClick { get; set; }
+
+    [Parameter]
+    public bool DirectoryOnly { get; set; }
+
+    public async Task OnClick(MenuItemEventArgs args)
+    {
+        var memo = args.Value as MemoItem;
+        if (OnMenuItemClick.HasDelegate && CurrentMemo?.Id != memo?.Id)
+        {
+            await OnMenuItemClick.InvokeAsync(args);
+        }
+    }
+}

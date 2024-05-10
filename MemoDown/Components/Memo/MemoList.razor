@@ -1,0 +1,67 @@
+﻿<RadzenStack AlignItems="AlignItems.Center" class="rz-mx-auto h-100">
+    <RadzenPanelMenu Multiple="true" ShowArrow="false" class="rz-scrollbars w-100">
+        <MemoItems Memo="Memo" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" />
+    </RadzenPanelMenu>
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public MemoItem? Memo { get; set; }
+
+    [Parameter]
+    public MemoItem? Selection { get; set; }
+
+    [Parameter]
+    public EventCallback<MemoItem?> SelectionChanged { get; set; }
+
+    private MemoItem? _memo;
+
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Memo != null)
+        {
+            _memo = new MemoItem
+                {
+                    FullPath = Memo.FullPath,
+                    Name = Memo.Name,
+                    IsDirectory = Memo.IsDirectory,
+                    CreatedAt = Memo.CreatedAt,
+                    LastModifiedAt = Memo.LastModifiedAt,
+                    Parent = Memo.Parent,
+                    Children = Memo.Children?.Where(c => c.)
+                };
+        }
+
+        base.OnParametersSet();
+    }
+
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        var x = parameters.GetValueOrDefault<MemoItem>("Memo");
+
+        return base.SetParametersAsync(parameters);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+    }
+
+
+    public async Task OnMemoItemClick(MenuItemEventArgs args)
+    {
+        var memo = args.Value as MemoItem;
+        await SelectionChanged.InvokeAsync(memo);
+    }
+
+    void OnMoreClick(MouseEventArgs args)
+    {
+
+    }
+}

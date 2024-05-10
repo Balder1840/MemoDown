@@ -1,0 +1,12 @@
+﻿ .btn-more {
+    display: none;
+}
+
+ .btn-more:hover {
+    border-radius: 3px;
+    background-color: var(--rz-base-300);
+}
+
+.rz-navigation-item-wrapper:hover .btn-more {
+    display: inherit;
+}
