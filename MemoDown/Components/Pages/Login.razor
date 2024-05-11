@@ -73,7 +73,12 @@
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
 
-            await HttpContext.SignInAsync(principal);
+            var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true
+                };
+
+            await HttpContext.SignInAsync(principal, authProperties);
 
             NavigationManager.NavigateTo(ReturnUrl ?? "/");
         }

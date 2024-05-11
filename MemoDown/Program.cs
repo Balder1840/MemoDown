@@ -19,15 +19,17 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(cfg =>
     {
+        cfg.Cookie.Name = "memodown.cookies";
         cfg.LoginPath = "/login";
         cfg.ExpireTimeSpan = TimeSpan.FromDays(3);
-        cfg.Events = new CookieAuthenticationEvents
-        {
-            OnValidatePrincipal = (context) =>
-            {
-                return Task.CompletedTask;
-            }
-        };
+        cfg.SlidingExpiration = true;
+        //cfg.Events = new CookieAuthenticationEvents
+        //{
+        //    OnValidatePrincipal = (context) =>
+        //    {
+        //        return Task.CompletedTask;
+        //    }
+        //};
     });
 //builder.Services.AddSingleton(sp =>
 //{
