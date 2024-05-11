@@ -39,7 +39,7 @@
     --rz-panel-menu-focus-outline: var(--rz-outline-focus);
     --rz-panel-menu-focus-outline-offset: calc(-1 * var(--rz-outline-width));
     --rz-panel-menu-item-line-height: 1.25rem;
-    --rz-panel-menu-item-padding: 0.75rem 1rem;
+    /*--rz-panel-menu-item-padding: 0.75rem 1rem;*/
     --rz-panel-menu-item-margin: 0;
     --rz-panel-menu-item-border: var(--rz-border-base-200);
     --rz-panel-menu-item-border-radius: 0;
@@ -49,8 +49,8 @@
     --rz-panel-menu-item-active-indicator: var(--rz-primary);
     --rz-panel-menu-item-offset: 0;
     --rz-panel-menu-item-transition: color var(--rz-transition), background-color var(--rz-transition);
-    --rz-panel-menu-2nd-level-vertical-offset: 0.25rem;
-    --rz-panel-menu-item-2nd-level-padding: 0.5rem 0.75rem 0.5rem 1rem;
+    /*--rz-panel-menu-2nd-level-vertical-offset: 0.25rem;*/
+    /*--rz-panel-menu-item-2nd-level-padding: 0.5rem 0.75rem 0.5rem 1rem;*/
     --rz-panel-menu-item-2nd-level-margin: 0 0.25rem;
     --rz-panel-menu-item-2nd-level-border-radius: var(--rz-border-radius);
     /*--rz-panel-menu-item-2nd-level-offset: 2.75rem;*/
@@ -76,6 +76,9 @@
     --rz-panel-menu-icon-2nd-level-icon-size: var(--rz-icon-size);
     --rz-panel-menu-toggle-icon-font-size: var(--rz-icon-size);
     --rz-panel-menu-toggle-icon-opacity: 1;
+    --rz-panel-menu-item-padding: 0.6rem 1rem;
+    --rz-panel-menu-2nd-level-vertical-offset: 0;
+    --rz-panel-menu-item-2nd-level-padding: 0.45rem 0.75rem 0.45rem 1rem;
     --rz-panel-menu-item-2nd-level-offset: 3.2rem;
     --rz-panel-menu-item-3rd-level-offset: 4rem;
     --rz-panel-menu-item-4th-level-offset: 4.8rem;

@@ -1,8 +1,40 @@
-﻿<RadzenStack AlignItems="AlignItems.Center" class="rz-mx-auto h-100">
-    <MemoPanelMenu class="rz-scrollbars w-100">
-        <MemoItems Memos="Memo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" RenderChildren="false" />
-    </MemoPanelMenu>
-</RadzenStack>
+﻿<list>
+    <RadzenStack AlignItems="AlignItems.Center" Gap="0" class="rz-mx-auto h-100">
+        <div class="list-search w-100">
+            <RadzenFormField>
+                <Start>
+                    <RadzenIcon Icon="search" />
+                </Start>
+                <ChildContent>
+                    <RadzenTextBox Placeholder="搜索笔记" />
+                </ChildContent>
+            </RadzenFormField>
+        </div>
+        @if (Memo != null)
+        {
+            <div class="list-hd">
+                <div class="path-name">@Memo.Name</div>
+            </div>
+        }
+
+        @if (Memo?.Children != null && Memo.Children.Any())
+        {
+            <MemoPanelMenu class="rz-scrollbars w-100">
+                <MemoItems Memos="Memo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" RenderChildren="false" />
+            </MemoPanelMenu>
+        }
+        else
+        {
+            <div class="no-content">
+                <div>
+                    <i class="icon-empty"></i>
+                    <p>没有找到文件</p>
+                    <RadzenButton Text="新建笔记" Shade="Shade.Light" Variant="Variant.Flat" />
+                </div>
+            </div>
+        }
+    </RadzenStack>
+</list>
 
 @code {
     [Parameter]
@@ -13,30 +45,6 @@
 
     [Parameter]
     public EventCallback<MemoItem?> SelectionChanged { get; set; }
-
-    private MemoItem? _memo;
-
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-    }
-
-    protected override void OnParametersSet()
-    {
-        base.OnParametersSet();
-    }
-
-    public override Task SetParametersAsync(ParameterView parameters)
-    {
-        return base.SetParametersAsync(parameters);
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        base.OnAfterRender(firstRender);
-    }
-
 
     public async Task OnMemoItemClick(MemoMenuItemEventArgs args)
     {

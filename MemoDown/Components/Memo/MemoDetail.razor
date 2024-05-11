@@ -1,0 +1,38 @@
+﻿<detail>
+    <RadzenStack AlignItems="AlignItems.Center" Gap="0" class="h-100">
+        @if (Memo != null)
+        {
+            <div class="hd w-100">
+                <div class="title">@Memo.Name</div>
+                <div class="toolbar"></div>
+            </div>
+            if (Memo.IsDirectory)
+            {
+                <div class="bd d-flex align-items-center justify-content-center w-100 h-100 ">
+                    <i svg-icon="" svgname="dir_detail_default" class="dir-detail-default">
+                        <svg style="display: inline-block; width: 100%; height: 100%" role="img" class="">
+                            <use xlink:href="#dir_detail_default"></use>
+                        </svg>
+                    </i>
+                </div>
+            }
+            else
+            {
+                <h3>@Memo.FullPath</h3>
+            }
+        }
+        else
+        {
+            <div svg-icon="" svgname="empty_logo" class="empty_logo flex-grow-1">
+                <svg style="display: inline-block; width: 100%; height: 100%" role="img" class="">
+                    <use xlink:href="#empty_logo"></use>
+                </svg>
+            </div>
+        }
+    </RadzenStack>
+</detail>
+
+@code {
+    [Parameter]
+    public MemoItem? Memo { get; set; }
+}

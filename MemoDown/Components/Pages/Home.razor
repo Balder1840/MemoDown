@@ -17,17 +17,10 @@
         <RadzenSplitterPane Collapsible="false">
             <RadzenSplitter>
                 <RadzenSplitterPane Size="250px" Min="50px" Max="400px">
-                    Pane B2
-                    <p>
-                        @SelectedSidebarMemo?.FullPath
-                    </p>
-                    <p>
-                        @SeletedMemo?.FullPath
-                    </p>
                     <MemoList Memo="SelectedSidebarMemo" @bind-Selection="SeletedMemo" />
                 </RadzenSplitterPane>
                 <RadzenSplitterPane Collapsible="false">
-                    Pane B3
+                    <MemoDetail Memo="SeletedMemo" />
                 </RadzenSplitterPane>
             </RadzenSplitter>
         </RadzenSplitterPane>

@@ -1,0 +1,67 @@
+﻿.no-content {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%);
+    text-align: center;
+    color: #7a8599;
+}
+
+.icon-empty {
+    display: block;
+    width: 140px;
+    height: 140px;
+    background: url(/images/empty_note.png) no-repeat;
+    background-size: 100% auto;
+}
+
+.no-content p {
+    color: #7a8599;
+    white-space: nowrap;
+    line-height: 22px;
+    font-size: 14px;
+}
+
+.list-search {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 56px;
+}
+
+.list-search ::deep .rz-form-field:hover .rz-form-field-content {
+    border: 1px solid var(--rz-base-400);
+}
+
+.list-search ::deep .rz-form-field.rz-state-focused .rz-form-field-content {
+    border:1px solid var(--rz-base-400);
+    box-shadow: none;
+}
+
+.list-hd {
+    height: 24px;
+    line-height: 24px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.list-hd .path-name {
+    display: inline-block;
+    margin: 0 55px;
+    color: #232d47;
+    opacity: .8;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+::deep .rz-form-field-content {
+    background-color: rgb(249,250,251);
+    border-radius: 1rem;
+}

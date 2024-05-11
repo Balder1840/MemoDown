@@ -20,6 +20,43 @@
     <Routes @rendermode="RenderModeForPage" />
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+
+    <div id="svg-sprite" style="visibility: hidden; width: 0; height: 0; display: flex; font-size: 0; vertical-align: top">
+        <svg xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
+            <defs>
+                <filter id="empty_logo-b" x="19.118" y="16.521" width="67.37" height="67.206" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                    <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                    <feColorMatrix in="SourceAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+                    <feOffset dy="4"/>
+                    <feGaussianBlur stdDeviation="4"/>
+                    <feColorMatrix values="0 0 0 0 0.137255 0 0 0 0 0.176471 0 0 0 0 0.278431 0 0 0 0.1 0"/>
+                    <feBlend in2="BackgroundImageFix" result="effect1_dropShadow_6233_39198"/>
+                    <feBlend in="SourceGraphic" in2="effect1_dropShadow_6233_39198" result="shape"/>
+                </filter>
+                <linearGradient id="empty_logo-a" x1="50" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#F4F6F7"/>
+                    <stop offset="1" stop-color="#EBEFF1"/>
+                </linearGradient>
+            </defs>
+            <symbol id="dir_detail_default" viewBox="0 0 72 64">
+                <title>Artboard 3</title>
+                <g fill="#E0E1E5" fill-rule="evenodd">
+                    <path d="M25.443 16.25l-4.245-7.283a.787.787 0 0 0-.605-.342H10.005a.405.405 0 0 0-.406.407V42.54c0 .227.18.398.4.398h40.997c.214 0 .4-.179.4-.398V16.648a.394.394 0 0 0-.4-.398H25.443zm6.306-7.625l-2.845-6.883C28.737 1.337 28.242 1 27.802 1H2.796A.797.797 0 0 0 2 1.799v47.963c0 .438.36.8.806.8H58.19a.805.805 0 0 0 .806-.8V9.425c0-.437-.361-.8-.806-.8H31.75z"/>
+                    <path d="M62.795 21.06c0-.551.452-.997 1.007-.997h3.528c1.693 0 3.065 1.395 3.065 3.016v35.905c0 1.666-1.353 3.016-3.065 3.016H16.463c-1.692 0-3.064-1.395-3.064-3.016v-3.609a1 1 0 0 1 .998-1h46.91c.832 0 1.488-.677 1.488-1.511V21.06z"/>
+                </g>
+            </symbol>
+            <symbol id="edit_pencil" viewBox="0 0 16 16">
+                <path fill="#398DEE" fill-rule="evenodd" d="M15.401 14.856H.595c-.328 0-.593.25-.593.56 0 .31.265.56.593.56H15.4c.328 0 .593-.25.593-.56 0-.31-.265-.56-.593-.56zM.593 13.246H3.18a.61.61 0 0 0 .42-.166l9.163-8.657a.545.545 0 0 0 .192-.412V4.01a.545.545 0 0 0-.192-.413l-2.525-2.386-.003-.002a.6.6 0 0 0-.038-.04l-.018-.016a.547.547 0 0 0-.029-.024l-.022-.015a.674.674 0 0 0-.027-.019l-.025-.014a.63.63 0 0 0-.21-.07l-.025-.004a.597.597 0 0 0-.06-.003h-.004a.61.61 0 0 0-.42.164L.176 9.843a.562.562 0 0 0-.176.4v2.442c0 .31.266.56.593.56zm9.183-10.89l1.748 1.652-.997.943-1.748-1.652.997-.943zm-8.59 8.117l6.756-6.384L9.69 5.741l-6.756 6.384H1.186v-1.652z"/>
+            </symbol>
+            <symbol id="empty_logo" viewBox="0 0 100 100">
+                <path d="M0 14.063C0 6.296 6.293 0 14.063 0h71.874C93.704 0 100 6.293 100 14.063v71.874C100 93.704 93.707 100 85.937 100H14.063C6.296 100 0 93.707 0 85.937V14.063z" fill="url(#empty_logo-a)"/>
+                <g filter="url(#empty_logo-b)" fill-rule="evenodd" clip-rule="evenodd">
+                    <path d="M59.489 22.327L76.722 39.56s3.667 3.1.359 6.407a30986048821380896 30986048821380896 0 0 1-25.318 23.721c-1.584.289-20.667 1.959-20.667 1.959s-4.444.887-3.938-3.938c.506-4.825 2.425-20.76 2.425-20.76s-.366-1.474 1.577-3.418l21.417-21.416c3.707-3.707 6.912.212 6.912.212z" fill="#fff"/>
+                    <path d="M28.172 70.632l39.816-39.815 8.759 8.759s3.666 3.1.359 6.407L55.568 67.521c-1.821 1.821-2.196 1.894-3.78 2.183-1.584.289-20.667 1.959-20.667 1.959s-1.956.39-3.125-.756c-.025-.025-.127.028.176-.275z" fill="#F9FAFB"/>
+                </g>
+            </symbol>
+        </svg>
+    </div>
 </body>
 
 </html>
