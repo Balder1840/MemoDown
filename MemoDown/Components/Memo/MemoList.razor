@@ -13,7 +13,7 @@
         @if (Memo != null)
         {
             <div class="list-hd">
-                <div class="path-name">@Memo.Name</div>
+                <div class="path-name">@(Memo.Parent != null ? Memo.Name : MemoConstants.MY_DIRECTORY)</div>
             </div>
         }
 

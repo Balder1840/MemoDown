@@ -1,10 +1,10 @@
 ﻿@if (Memos != null && Memos.Any())
 {
-    @foreach (var memo in Memos.Where(m => !DirectoryOnly || m.IsDirectory))
+    @foreach (var memo in Memos.Where(m => !DirectoryOnly || m.IsDirectory).OrderByDescending(m => m.IsDirectory))
     {
         @if (RenderChildren && memo.Children != null && memo.Children.Any())
         {
-            <MemoPanelMenuItem @ref="children[memo.Id]" Value="memo"
+            <MemoPanelMenuItem @key="memo.Id" @ref="children[memo.Id]" Value="memo"
                                Click="OnClick"
                                Selected="@(CurrentMemo?.FullPath == memo.FullPath)"
                                Expanded="IsExpended(memo,CurrentMemo)">
@@ -28,7 +28,7 @@
         }
         else
         {
-            <MemoPanelMenuItem @ref="children[memo.Id]" Value="memo"
+            <MemoPanelMenuItem @key="memo.Id" @ref="children[memo.Id]" Value="memo"
                                Click="OnClick"
                                Selected="@(CurrentMemo?.FullPath == memo.FullPath)">
                 <Template>

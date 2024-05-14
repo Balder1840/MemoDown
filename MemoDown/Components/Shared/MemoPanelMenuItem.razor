@@ -34,7 +34,7 @@
             }
             else
             {
-                <div class="rz-navigation-item-link" style="@(Parent?.DisplayStyle == MenuItemDisplayStyle.Icon?"margin-right:0px;":"")" >
+                <div class="rz-navigation-item-link" style="@(Parent?.DisplayStyle == MenuItemDisplayStyle.Icon?"margin-right:0px;":"")">
                     @if (!string.IsNullOrEmpty(Icon) && (Parent?.DisplayStyle == MenuItemDisplayStyle.Icon || Parent?.DisplayStyle == MenuItemDisplayStyle.IconAndText))
                     {
                         <i class="rzi rz-navigation-item-icon" style="@getIconStyle()">@((MarkupString)Icon)</i>
@@ -51,7 +51,7 @@
                     {
                         <span class="rz-navigation-item-text">@Text</span>
                     }
-                    @if (items.Any() && Parent?.ShowArrow == true)
+                    @if (ShowArrow && items.Any() && Parent?.ShowArrow == true)
                     {
                         <i class="rzi rz-navigation-item-icon-children" style="@getStyle()" @onclick="@Toggle" @onclick:stopPropagation>keyboard_arrow_down</i>
                     }

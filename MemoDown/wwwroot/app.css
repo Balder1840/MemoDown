@@ -79,9 +79,10 @@
     --rz-panel-menu-item-padding: 0.6rem 1rem;
     --rz-panel-menu-2nd-level-vertical-offset: 0;
     --rz-panel-menu-item-2nd-level-padding: 0.45rem 0.75rem 0.45rem 1rem;
-    --rz-panel-menu-item-2nd-level-offset: 3.2rem;
-    --rz-panel-menu-item-3rd-level-offset: 4rem;
-    --rz-panel-menu-item-4th-level-offset: 4.8rem;
+    --rz-panel-menu-item-2nd-level-offset: 2.3rem;
+    --rz-panel-menu-item-3rd-level-offset: 3.0rem;
+    --rz-panel-menu-item-4th-level-offset: 3.7rem;
+    --rz-panel-menu-item-5th-level-offset: 4.4rem;
 }
 
 .rz-panel-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-item .rz-navigation-item-link {
@@ -90,4 +91,8 @@
 
 .rz-panel-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-item .rz-navigation-item-link {
     padding-left: var(--rz-panel-menu-item-4th-level-offset);
+}
+
+.rz-panel-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-item .rz-navigation-item-link {
+    padding-left: var(--rz-panel-menu-item-5th-level-offset);
 }

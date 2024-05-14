@@ -114,6 +114,9 @@ namespace MemoDown.Components.Shared
         [Parameter]
         public RenderFragment ChildContent { get; set; }
 
+        [Parameter]
+        public bool ShowArrow { get; set; } = true;
+
         internal async System.Threading.Tasks.Task Toggle()
         {
             if (!ExpandedInternal && !Parent.Multiple)

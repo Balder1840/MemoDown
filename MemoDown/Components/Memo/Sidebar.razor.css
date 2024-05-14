@@ -8,4 +8,13 @@
 
 ::deep .btn-add {
     min-width: 100px;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+::deep .my-directory > .rz-navigation-item-wrapper .rz-navigation-item-link {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    font-size: 15px;
+    font-weight: 600;
 }

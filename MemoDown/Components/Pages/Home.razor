@@ -9,23 +9,26 @@
 
 @inject MemoService _service
 
-<CascadingValue Value="@RootMemo">
-    <RadzenSplitter>
-        <RadzenSplitterPane Size="250px" Min="50px" Max="400px" class="h-100">
-            <Sidebar @bind-Selection="SelectedSidebarMemo" />
-        </RadzenSplitterPane>
-        <RadzenSplitterPane Collapsible="false">
-            <RadzenSplitter>
-                <RadzenSplitterPane Size="250px" Min="50px" Max="400px">
-                    <MemoList Memo="SelectedSidebarMemo" @bind-Selection="SeletedMemo" />
-                </RadzenSplitterPane>
-                <RadzenSplitterPane Collapsible="false">
-                    <MemoDetail Memo="SeletedMemo" />
-                </RadzenSplitterPane>
-            </RadzenSplitter>
-        </RadzenSplitterPane>
-    </RadzenSplitter>
+<CascadingValue Value="this">
+    <CascadingValue Value="@RootMemo">
+        <RadzenSplitter>
+            <RadzenSplitterPane Size="250px" Min="50px" Max="400px" class="h-100">
+                <Sidebar @bind-Selection="SelectedSidebarMemo" />
+            </RadzenSplitterPane>
+            <RadzenSplitterPane Collapsible="false">
+                <RadzenSplitter>
+                    <RadzenSplitterPane Size="250px" Min="50px" Max="400px">
+                        <MemoList Memo="SelectedSidebarMemo" @bind-Selection="SeletedMemo" />
+                    </RadzenSplitterPane>
+                    <RadzenSplitterPane Collapsible="false">
+                        <MemoDetail Memo="SeletedMemo" />
+                    </RadzenSplitterPane>
+                </RadzenSplitter>
+            </RadzenSplitterPane>
+        </RadzenSplitter>
+    </CascadingValue>
 </CascadingValue>
+
 @code {
     private MemoItem? RootMemo { get; set; }
 
@@ -41,20 +44,21 @@
     }
 
     private MemoItem? _seletedMemo;
-    private MemoItem? SeletedMemo {
+    public MemoItem? SeletedMemo {
         get {
             return _seletedMemo;
         }
         set {
             _seletedMemo = value;
             _service.SetSelectedMemo(_seletedMemo);
+            StateHasChanged();
         }
     }
 
     protected override void OnInitialized()
     {
         RootMemo = _service.RootMemo;
-        _selectedSidebarMemo = _service.SelectedSidebarMemo;
+        _selectedSidebarMemo = _service.SelectedSidebarMemo ?? RootMemo;
         _seletedMemo = _service.SelectedMemo ?? _service.GetSelectedMemoFromSidebar(_selectedSidebarMemo);
 
         base.OnParametersSet();
