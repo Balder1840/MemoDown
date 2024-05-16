@@ -21,7 +21,11 @@
                     <span class="rz-navigation-item-text">@MemoConstants.MY_DIRECTORY</span>
                 </Template>
                 <ChildContent>
-                    <MemoItems Memos="RootMemo?.Children" CurrentMemo="SelectedSidebarMemo" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" DirectoryOnly="true" />
+                    <MemoItems Memos="RootMemo?.Children"
+                               CurrentMemo="SelectedSidebarMemo"
+                               OnMenuItemClick=@OnMemoItemClick
+                               OnMemoContextMenu="OnOpenContextMenu"
+                               DirectoryOnly="true" />
                 </ChildContent>
             </MemoPanelMenuItem>
 
@@ -47,9 +51,9 @@
         _memoService.SetSelectedMemoFromSidebar();
     }
 
-    void OnMoreClick(MouseEventArgs args)
+    void OnOpenContextMenu(MemoContextMenuArgs args)
     {
-
+        _contextMenuService.HandleOpenContextMenu(args);
     }
 
     public void Dispose()

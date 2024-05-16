@@ -1,4 +1,6 @@
 ﻿@inject MemoService _memoService
+@* @inject Radzen.ContextMenuService ContextMenuService *@
+@inject ContextMenuService _contextMenuService
 @implements IDisposable
 
 <list>
@@ -23,7 +25,11 @@
         @if (SidebarMemo?.Children != null && SidebarMemo.Children.Any())
         {
             <MemoPanelMenu class="rz-scrollbars w-100">
-                <MemoItems Memos="SidebarMemo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" RenderChildren="false" />
+                <MemoItems Memos="SidebarMemo?.Children"
+                           CurrentMemo="Selection"
+                           OnMenuItemClick=@OnMemoItemClick
+                           OnMemoContextMenu="OnOpenContextMenu"
+                           RenderChildren="false" />
             </MemoPanelMenu>
         }
         else
@@ -54,9 +60,9 @@
         _memoService.SetSelectedMemo(args.Value as MemoItem);
     }
 
-    void OnMoreClick(MouseEventArgs args)
+    void OnOpenContextMenu(MemoContextMenuArgs args)
     {
-
+        _contextMenuService.HandleOpenContextMenu(args);
     }
 
     void OnBtnAddClick(MouseEventArgs args)
@@ -69,4 +75,22 @@
     {
         _memoService.OnSelectedMemoChanged -= StateHasChanged;
     }
+
+    // void ShowContextMenuWithContent(MemoContextMenuArgs args) => ContextMenuService.Open(args.MouseArgs, ds =>
+    // @<RadzenMenu Click="@(arg=>OnMenuItemClick(arg,args.Memo))">
+    //     <RadzenMenuItem Text="@MemoConstants.NEW_FILE" Value="@MemuEnum.CreateNote" Image="/images/markdown_20x20.png" ImageStyle="margin-right:0.5rem;" />
+    //     <RadzenMenuItem Text="@MemoConstants.NEW_DIRECTORY" Value="@MemuEnum.CreateDiretory" Icon="folder" />
+    //     <hr />
+    //     <RadzenMenuItem Text="@MemoConstants.RENAME" Value="@MemuEnum.Rename" Icon="drive_file_rename_outline"></RadzenMenuItem>
+    //     <hr />
+    //     <RadzenMenuItem Text="@MemoConstants.DELETE" Value="@MemuEnum.Delete" Icon="delete"></RadzenMenuItem>
+    // </RadzenMenu>);
+
+    // void OnMenuItemClick(MenuItemEventArgs args, MemoItem memo)
+    // {
+    //     if (!args.Value.Equals(3) && !args.Value.Equals(4))
+    //     {
+    //         ContextMenuService.Close();
+    //     }
+    // }
 }
