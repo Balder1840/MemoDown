@@ -1,4 +1,7 @@
-﻿<list>
+﻿@inject MemoService _memoService
+@implements IDisposable
+
+<list>
     <RadzenStack AlignItems="AlignItems.Center" Gap="0" class="rz-mx-auto h-100">
         <div class="list-search w-100">
             <RadzenFormField>
@@ -10,17 +13,17 @@
                 </ChildContent>
             </RadzenFormField>
         </div>
-        @if (Memo != null)
+        @if (SidebarMemo != null)
         {
             <div class="list-hd">
-                <div class="path-name">@(Memo.Parent != null ? Memo.Name : MemoConstants.MY_DIRECTORY)</div>
+                <div class="path-name">@(SidebarMemo.Parent != null ? SidebarMemo.Name : MemoConstants.MY_DIRECTORY)</div>
             </div>
         }
 
-        @if (Memo?.Children != null && Memo.Children.Any())
+        @if (SidebarMemo?.Children != null && SidebarMemo.Children.Any())
         {
             <MemoPanelMenu class="rz-scrollbars w-100">
-                <MemoItems Memos="Memo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" RenderChildren="false" />
+                <MemoItems Memos="SidebarMemo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" RenderChildren="false" />
             </MemoPanelMenu>
         }
         else
@@ -37,23 +40,27 @@
 </list>
 
 @code {
-    [Parameter]
-    public MemoItem? Memo { get; set; }
+    private MemoItem? SidebarMemo => _memoService.SelectedSidebarMemo;
+    private MemoItem? Selection => _memoService.SelectedMemo;
 
-    [Parameter]
-    public MemoItem? Selection { get; set; }
-
-    [Parameter]
-    public EventCallback<MemoItem?> SelectionChanged { get; set; }
-
-    public async Task OnMemoItemClick(MemoMenuItemEventArgs args)
+    protected override void OnInitialized()
     {
-        var memo = args.Value as MemoItem;
-        await SelectionChanged.InvokeAsync(memo);
+        _memoService.OnSelectedMemoChanged += StateHasChanged;
+        base.OnInitialized();
+    }
+
+    public void OnMemoItemClick(MemoMenuItemEventArgs args)
+    {
+        _memoService.SetSelectedMemo(args.Value as MemoItem);
     }
 
     void OnMoreClick(MouseEventArgs args)
     {
 
+    }
+
+    public void Dispose()
+    {
+        _memoService.OnSelectedMemoChanged -= StateHasChanged;
     }
 }

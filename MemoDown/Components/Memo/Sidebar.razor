@@ -1,14 +1,13 @@
-﻿@inject ContextMenuService ContextMenuService
+﻿@inject ContextMenuService _contextMenuService
 @inject MemoService _memoService
-@inject IOptions<MemoDownOptions> _options
-@inject NotificationService NotificationService
+@implements IDisposable
 
 <sidebar>
     <RadzenStack AlignItems="AlignItems.Center" Gap="0" class="rz-mx-auto h-100">
         <div class="avatar rz-mt-8">
             <RadzenImage Path="/images/avatar.jpg" />
         </div>
-        <RadzenButton Text="新建" Icon="add" Shade="Shade.Light" class="btn-add" Click="OnAddClick" />
+        <RadzenButton Text="新建" Icon="add" Shade="Shade.Light" class="btn-add" Click="@(args=> _contextMenuService.HandleSidebarBtnAddClick(args))" />
 
         <MemoPanelMenu Multiple="true" class="rz-scrollbars w-100">
             <MemoPanelMenuItem @key="RootMemo?.Id"
@@ -17,12 +16,12 @@
                                Expanded="true"
                                class="my-directory"
                                Click="OnMemoItemClick"
-                               Selected="@(Selection?.FullPath == RootMemo?.FullPath)">
+                               Selected="@(SelectedSidebarMemo?.FullPath == RootMemo?.FullPath)">
                 <Template>
                     <span class="rz-navigation-item-text">@MemoConstants.MY_DIRECTORY</span>
                 </Template>
                 <ChildContent>
-                    <MemoItems Memos="RootMemo?.Children" CurrentMemo="Selection" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" DirectoryOnly="true" />
+                    <MemoItems Memos="RootMemo?.Children" CurrentMemo="SelectedSidebarMemo" OnMenuItemClick=@OnMemoItemClick OnBtnMoreClick="OnMoreClick" DirectoryOnly="true" />
                 </ChildContent>
             </MemoPanelMenuItem>
 
@@ -32,22 +31,20 @@
 </sidebar>
 
 @code {
-    [CascadingParameter]
-    public MemoItem? RootMemo { get; set; }
+    public MemoItem? RootMemo => _memoService.RootMemo;
 
-    [CascadingParameter]
-    public Pages.Home? HomePage { get; set; }
+    private MemoItem? SelectedSidebarMemo => _memoService.SelectedSidebarMemo;
 
-    [Parameter]
-    public MemoItem? Selection { get; set; }
-
-    [Parameter]
-    public EventCallback<MemoItem?> SelectionChanged { get; set; }
-
-    public async Task OnMemoItemClick(MemoMenuItemEventArgs args)
+    protected override void OnInitialized()
     {
-        var memo = args.Value as MemoItem;
-        await SelectionChanged.InvokeAsync(memo);
+        _memoService.OnSelectedSidebarMemoChanged += StateHasChanged;
+        base.OnInitialized();
+    }
+
+    public void OnMemoItemClick(MemoMenuItemEventArgs args)
+    {
+        _memoService.SetSelectedSidebarMemo(args.Value as MemoItem);
+        _memoService.SetSelectedMemoFromSidebar();
     }
 
     void OnMoreClick(MouseEventArgs args)
@@ -55,52 +52,8 @@
 
     }
 
-    void OnAddClick(MouseEventArgs args)
+    public void Dispose()
     {
-        ShowContextMenuWithItems(args);
-    }
-
-    void ShowContextMenuWithItems(MouseEventArgs args)
-    {
-        ContextMenuService.Open(args,
-            new List<ContextMenuItem> {
-                new ContextMenuItem(){ Text = MemoConstants.NEW_FILE, Value = MemuEnum.CreateNote, Image="/images/markdown_20x20.png", ImageStyle="margin-right:0.5rem;" },
-                new ContextMenuItem(){ Text = MemoConstants.NEW_DIRECTORY, Value = MemuEnum.CreateDiretory, Icon = "folder" } },
-            OnMenuItemClick);
-    }
-
-    void OnMenuItemClick(MenuItemEventArgs args)
-    {
-        var menu = (MemuEnum)args.Value;
-
-        switch (menu)
-        {
-            case MemuEnum.CreateNote:
-                {
-                    var memo = _memoService.CreateFile(Selection);
-                    if (memo != null && HomePage != null)
-                    {
-                        HomePage.SeletedMemo = memo;
-                    }
-                    break;
-                }
-
-            case MemuEnum.CreateDiretory:
-                {
-                    var memo = _memoService.CreateDirectory(Selection);
-                    if (memo != null)
-                    {
-                        SelectionChanged.InvokeAsync(memo);
-                    }
-                    break;
-                }
-            default:
-                NotificationService.Notify(NotificationSeverity.Warning, "", "");
-                break;
-        }
-
-        NotificationService.Notify(NotificationSeverity.Success, "创建成功！");
-
-        ContextMenuService.Close();
+        _memoService.OnSelectedSidebarMemoChanged -= StateHasChanged;
     }
 }

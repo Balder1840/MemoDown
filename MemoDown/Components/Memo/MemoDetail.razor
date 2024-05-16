@@ -1,4 +1,7 @@
-﻿<detail>
+﻿@inject MemoService _memoService
+@implements IDisposable
+
+<detail>
     <RadzenStack AlignItems="AlignItems.Center" Gap="0" class="h-100">
         @if (Memo != null)
         {
@@ -33,6 +36,16 @@
 </detail>
 
 @code {
-    [Parameter]
-    public MemoItem? Memo { get; set; }
+    public MemoItem? Memo => _memoService.SelectedMemo;
+
+    protected override void OnInitialized()
+    {
+        _memoService.OnSelectedMemoChanged += StateHasChanged;
+        base.OnInitialized();
+    }
+
+    public void Dispose()
+    {
+        _memoService.OnSelectedMemoChanged -= StateHasChanged;
+    }
 }

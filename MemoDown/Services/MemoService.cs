@@ -11,38 +11,31 @@ namespace MemoDown.Services
         private readonly MemoStore _store;
         private readonly IOptions<MemoDownOptions> _options;
         private MemoItem? _selectedMemo;
+        private MemoItem? _selectedSidebarMemo;
 
+        public MemoItem RootMemo => _store.Memo;
         public MemoItem? SelectedMemo => _selectedMemo;
-        public MemoItem? SelectedSidebarMemo => SelectedMemo?.Parent;
+        public MemoItem? SelectedSidebarMemo => _selectedSidebarMemo ?? SelectedMemo?.Parent ?? RootMemo;
+
+        public event Action OnSelectedMemoChanged;
+        public event Action OnSelectedSidebarMemoChanged;
+
+        #region Constructor & Initializer
         public MemoService(MemoStore store, IOptions<MemoDownOptions> options)
         {
             _store = store;
             _options = options;
+
+            OnSelectedMemoChanged = default!;
+            OnSelectedSidebarMemoChanged = default!;
 
             InitializeSelectedMemo(RootMemo);
             if (_selectedMemo == null)
             {
                 InitializeSelectedMemo(RootMemo, true);
             }
-        }
 
-        public MemoItem RootMemo => _store.Memo;
-
-        public void SetSelectedMemo(MemoItem? memo)
-        {
-            _selectedMemo = memo;
-        }
-
-        public MemoItem? GetSelectedMemoFromSidebar(MemoItem? sidebarMemo)
-        {
-            var seletedMemo = sidebarMemo?.Children?.FirstOrDefault(m => !m.IsDirectory);
-            if (seletedMemo == null)
-            {
-                seletedMemo = sidebarMemo?.Children?.FirstOrDefault();
-            }
-
-            SetSelectedMemo(seletedMemo);
-            return seletedMemo;
+            _selectedMemo ??= GetSelectedMemoFromSidebar(SelectedSidebarMemo);
         }
 
         private void InitializeSelectedMemo(MemoItem memo, bool includingDirectory = false)
@@ -63,7 +56,45 @@ namespace MemoDown.Services
                 InitializeSelectedMemo(memo.Children.First(m => m.IsDirectory), includingDirectory);
             }
         }
+        #endregion
 
+        #region State Container
+        public void NotifySelectedMemoChanged() => OnSelectedMemoChanged?.Invoke();
+        public void NotifySelectedSidebarMemoChanged() => OnSelectedSidebarMemoChanged?.Invoke();
+
+        public void SetSelectedMemo(MemoItem? memo)
+        {
+            _selectedMemo = memo;
+            NotifySelectedMemoChanged();
+        }
+
+        public void SetSelectedSidebarMemo(MemoItem? memo)
+        {
+            _selectedSidebarMemo = memo;
+            NotifySelectedSidebarMemoChanged();
+        }
+
+        public void SetSelectedMemoFromSidebar()
+        {
+            _selectedMemo = GetSelectedMemoFromSidebar(_selectedSidebarMemo);
+            NotifySelectedMemoChanged();
+        }
+
+        private MemoItem? GetSelectedMemoFromSidebar(MemoItem? sidebarMemo)
+        {
+            var seletedMemo = sidebarMemo?.Children?.FirstOrDefault(m => !m.IsDirectory);
+            if (seletedMemo == null)
+            {
+                seletedMemo = sidebarMemo?.Children?.FirstOrDefault();
+            }
+
+            SetSelectedMemo(seletedMemo);
+            return seletedMemo;
+        }
+
+        #endregion
+
+        #region Memu Handler
         public MemoItem? CreateFile(MemoItem? selection, bool createInParent = false)
         {
             string? dir = null;
@@ -200,5 +231,7 @@ namespace MemoDown.Services
 
             return newMemo;
         }
+
+        #endregion
     }
 }
