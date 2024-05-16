@@ -32,7 +32,7 @@
                 <div>
                     <i class="icon-empty"></i>
                     <p>没有找到文件</p>
-                    <RadzenButton Text="新建笔记" Shade="Shade.Light" Variant="Variant.Flat" />
+                    <RadzenButton Text="新建笔记" Shade="Shade.Light" Variant="Variant.Flat" Click="OnBtnAddClick" />
                 </div>
             </div>
         }
@@ -57,6 +57,12 @@
     void OnMoreClick(MouseEventArgs args)
     {
 
+    }
+
+    void OnBtnAddClick(MouseEventArgs args)
+    {
+        var memo = _memoService.CreateFile(_memoService.SelectedSidebarMemo);
+        _memoService.SetSelectedMemo(memo);
     }
 
     public void Dispose()
