@@ -15,14 +15,17 @@ namespace MemoDown.Services
         private readonly NotificationService _notificationService;
         private readonly RadzenContextMenuService _contextMenuService;
         private readonly MemoService _memoService;
+        private readonly DialogService _dialogService;
 
         public ContextMenuService(NotificationService notificationService,
             RadzenContextMenuService contextMenuService,
-            MemoService memoService)
+            MemoService memoService,
+            DialogService dialogService)
         {
             _notificationService = notificationService;
             _contextMenuService = contextMenuService;
             _memoService = memoService;
+            _dialogService = dialogService;
         }
 
         public void HandleSidebarBtnAddClick(MouseEventArgs args)
@@ -39,9 +42,9 @@ namespace MemoDown.Services
             RenderFragment<RadzenContextMenuService> rf = value => __builder2 =>
             {
                 __builder2.OpenComponent<RadzenMenu>(545);
-                __builder2.AddComponentParameter(546, "Click", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create((object)this, delegate (MenuItemEventArgs arg)
+                __builder2.AddComponentParameter(546, "Click", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create((object)this, async delegate (MenuItemEventArgs arg)
                 {
-                    OnContextMenuClick(arg, args.Memo);
+                    await OnContextMenuClick(arg, args.Memo);
                 })));
                 __builder2.AddAttribute(547, "ChildContent", (RenderFragment)delegate (RenderTreeBuilder __builder3)
                 {
@@ -76,13 +79,46 @@ namespace MemoDown.Services
             _contextMenuService.Open(args.MouseArgs, rf);
         }
 
-        private void OnContextMenuClick(MenuItemEventArgs args, MemoItem memo)
+        private async Task OnContextMenuClick(MenuItemEventArgs args, MemoItem selection)
         {
-            _notificationService.Notify(NotificationSeverity.Success, $"调用成功！{args.Text}-{memo.FullPath}");
-            if (!args.Value.Equals(3) && !args.Value.Equals(4))
+            var menu = (MemuEnum)args.Value;
+
+            switch (menu)
             {
-                _contextMenuService.Close();
+                case MemuEnum.CreateNote:
+                    {
+                        var memo = _memoService.CreateFile(selection, !selection.IsDirectory);
+                        _memoService.SetSelectedSidebarMemo(memo?.Parent);
+                        _memoService.SetSelectedMemo(memo);
+                        _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                        break;
+                    }
+                case MemuEnum.CreateDiretory:
+                    {
+                        var memo = _memoService.CreateDirectory(selection, !selection.IsDirectory);
+                        _memoService.SetSelectedSidebarMemo(memo);
+                        _memoService.SetSelectedMemo(memo);
+                        _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                        break;
+                    }
+                case MemuEnum.Delete:
+                    {
+                        var confirmation = selection.IsDirectory ? $"文件夹{selection.Name}及其子文件" : $"文件{selection.Name}";
+                        var confirmResult = await _dialogService.ConfirmDelete(confirmation);
+                        if (confirmResult.HasValue && confirmResult.Value)
+                        {
+                            _memoService.Delete(selection);
+                            _notificationService.Notify(NotificationSeverity.Success, "删除成功！");
+                        }
+                        break;
+                    }
+                default:
+                    _notificationService.Notify(NotificationSeverity.Error, "未知菜单类型！");
+                    break;
             }
+
+            _notificationService.Notify(NotificationSeverity.Success, $"{args.Text}-{selection.FullPath}");
+            _contextMenuService.Close();
         }
 
         private void OnMenuItemClick(MenuItemEventArgs args, MemoItem? selection)
@@ -95,6 +131,8 @@ namespace MemoDown.Services
                     {
                         var memo = _memoService.CreateFile(selection);
                         _memoService.SetSelectedMemo(memo);
+
+                        _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
                         break;
                     }
                 case MemuEnum.CreateDiretory:
@@ -102,14 +140,14 @@ namespace MemoDown.Services
                         var memo = _memoService.CreateDirectory(selection);
                         _memoService.SetSelectedSidebarMemo(memo);
                         _memoService.SetSelectedMemo(memo);
+
+                        _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
                         break;
                     }
                 default:
                     _notificationService.Notify(NotificationSeverity.Error, "未知菜单类型！");
                     break;
             }
-
-            _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
 
             _contextMenuService.Close();
         }

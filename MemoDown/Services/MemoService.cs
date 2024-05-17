@@ -232,6 +232,40 @@ namespace MemoDown.Services
             return newMemo;
         }
 
+        public void Delete(MemoItem selection)
+        {
+            if (selection.IsDirectory)
+            {
+                if (Directory.Exists(selection.FullPath))
+                {
+                    Directory.Delete(selection.FullPath, true);
+
+                    selection.Parent?.Children?.Remove(selection);
+
+                    if (selection.Id == _selectedSidebarMemo?.Id)
+                    {
+                        SetSelectedSidebarMemo(selection.Parent);
+                    }
+                    else
+                    {
+                        NotifySelectedSidebarMemoChanged();
+                    }
+                    SetSelectedMemoFromSidebar();
+                }
+            }
+            else
+            {
+                if (File.Exists(selection.FullPath))
+                {
+                    File.Delete(selection.FullPath);
+                    selection.Parent?.Children?.Remove(selection);
+
+                    SetSelectedMemoFromSidebar();
+                }
+            }
+
+        }
+
         #endregion
     }
 }

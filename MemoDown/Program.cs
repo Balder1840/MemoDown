@@ -9,6 +9,7 @@ using Radzen;
 using System.Security.Claims;
 using NotificationService = MemoDown.Services.NotificationService;
 using ContextMenuService = MemoDown.Services.ContextMenuService;
+using DialogService = MemoDown.Services.DialogService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,7 @@ builder.Services.AddHostedService<MemoStoreInitializeService>();
 builder.Services.AddSingleton<MemoService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
+builder.Services.AddScoped<DialogService>();
 
 builder.Services.AddOptions<AccountOptions>().BindConfiguration("Account");
 builder.Services.AddOptions<MemoDownOptions>().BindConfiguration("MemoDown");

@@ -77,20 +77,42 @@
     }
 
     // void ShowContextMenuWithContent(MemoContextMenuArgs args) => ContextMenuService.Open(args.MouseArgs, ds =>
-    // @<RadzenMenu Click="@(arg=>OnMenuItemClick(arg,args.Memo))">
+    // @<RadzenMenu Click="@(async arg => await OnMenuItemClick(arg,args.Memo))">
     //     <RadzenMenuItem Text="@MemoConstants.NEW_FILE" Value="@MemuEnum.CreateNote" Image="/images/markdown_20x20.png" ImageStyle="margin-right:0.5rem;" />
     //     <RadzenMenuItem Text="@MemoConstants.NEW_DIRECTORY" Value="@MemuEnum.CreateDiretory" Icon="folder" />
     //     <hr />
     //     <RadzenMenuItem Text="@MemoConstants.RENAME" Value="@MemuEnum.Rename" Icon="drive_file_rename_outline"></RadzenMenuItem>
     //     <hr />
     //     <RadzenMenuItem Text="@MemoConstants.DELETE" Value="@MemuEnum.Delete" Icon="delete"></RadzenMenuItem>
-    // </RadzenMenu>);
+    // </RadzenMenu>
+    //     );
 
-    // void OnMenuItemClick(MenuItemEventArgs args, MemoItem memo)
+    // void ShowContextMenuWithContent2(MemoContextMenuArgs args) => ContextMenuService.Open(args.MouseArgs, ds =>
+    // @<RadzenMenu Click="OnMenuItemClick2">
+    //     <RadzenMenuItem Text="@MemoConstants.NEW_FILE" Value="@MemuEnum.CreateNote" Image="/images/markdown_20x20.png" ImageStyle="margin-right:0.5rem;" />
+    //     <RadzenMenuItem Text="@MemoConstants.NEW_DIRECTORY" Value="@MemuEnum.CreateDiretory" Icon="folder" />
+    //     <hr />
+    //     <RadzenMenuItem Text="@MemoConstants.RENAME" Value="@MemuEnum.Rename" Icon="drive_file_rename_outline"></RadzenMenuItem>
+    //     <hr />
+    //     <RadzenMenuItem Text="@MemoConstants.DELETE" Value="@MemuEnum.Delete" Icon="delete"></RadzenMenuItem>
+    // </RadzenMenu>
+    // );
+
+    // async Task OnMenuItemClick(MenuItemEventArgs args, MemoItem memo)
     // {
     //     if (!args.Value.Equals(3) && !args.Value.Equals(4))
     //     {
-    //         ContextMenuService.Close();
+    //         // ContextMenuService.Close();
+    //         await Task.Delay(10);
+    //     }
+    // }
+
+    // async Task OnMenuItemClick2(MenuItemEventArgs args)
+    // {
+    //     if (!args.Value.Equals(3) && !args.Value.Equals(4))
+    //     {
+    //         // ContextMenuService.Close();
+    //         await Task.Delay(10);
     //     }
     // }
 }
