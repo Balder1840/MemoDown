@@ -13,7 +13,7 @@
                 <div class="title">@Memo.Name</div>
                 <div class="toolbar">
                     @Memo.FullPath
-                    <RadzenButton Text="保存" IsBusy="false" BusyText="保存中" ButtonStyle="ButtonStyle.Light" />
+                    <RadzenButton Text="保存" IsBusy="_isSaving" BusyText="保存中" ButtonStyle="ButtonStyle.Light" Click="SaveMarkdownContent" />
                     <div class="hd-view-mode">
                         <RadzenProfileMenu Click="HandleSwitchMode">
                             <Template>
@@ -65,18 +65,45 @@
 
     private MemoItem? _previousMemo = null;
 
-    private string _markdown = string.Empty;
+    private string? _markdown;
 
     private Cherrydown Editor = default!;
 
-    private PeriodicTimer _timer;
+    private Timer? _timer;
+    private bool _isSaving;
 
     protected override void OnInitialized()
     {
         _memoService.OnSelectedMemoChanged += StateHasChanged;
-        _timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+        _timer = new Timer(async _ =>
+        {
+            await SaveMarkdownContent();
+
+        }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30));
 
         base.OnInitialized();
+    }
+
+    private async Task SaveMarkdownContent()
+    {
+        if (!_isSaving)
+        {
+            _isSaving = true;
+            await InvokeAsync(StateHasChanged);
+
+            await Task.Delay(200);
+
+            var markdown = await Editor.GetValueAsync();
+            if (_markdown != markdown)
+            {
+                _service.SaveMarkdownContents(Memo, markdown);
+
+                _markdown = markdown;
+            }
+
+            _isSaving = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -111,6 +138,6 @@
     public void Dispose()
     {
         _memoService.OnSelectedMemoChanged -= StateHasChanged;
-        _timer.Dispose();
+        _timer?.Dispose();
     }
 }

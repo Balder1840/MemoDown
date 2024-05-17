@@ -273,6 +273,17 @@ namespace MemoDown.Services
         {
             return memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
         }
+
+        public void SaveMarkdownContents(MemoItem? memo, string? content)
+        {
+            if (memo != null && !memo.IsDirectory && File.Exists(memo.FullPath))
+            {
+                using var fs = new StreamWriter(memo.FullPath);
+                fs.Write(content);
+                fs.Flush();
+                fs.Close();
+            }
+        }
         #endregion
     }
 }
