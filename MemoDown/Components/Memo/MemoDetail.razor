@@ -2,7 +2,7 @@
 @inject MemoService _memoService
 @inject IConfiguration _config
 @inject MemoService _service
-
+@inject IOptions<MemoDownOptions> _options
 @implements IDisposable
 
 <detail>
@@ -75,11 +75,11 @@
     protected override void OnInitialized()
     {
         _memoService.OnSelectedMemoChanged += StateHasChanged;
-        // _timer = new Timer(async _ =>
-        // {
-        //     await SaveMarkdownContent();
+        _timer = new Timer(async _ =>
+        {
+            await SaveMarkdownContent();
 
-        // }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30));
+        }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(_options.Value.AutoSavingIntervalSecond));
 
         base.OnInitialized();
     }
