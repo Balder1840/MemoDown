@@ -13,6 +13,23 @@
                 <div class="title">@Memo.Name</div>
                 <div class="toolbar">
                     @Memo.FullPath
+                    <RadzenButton Text="保存" IsBusy="false" BusyText="保存中" ButtonStyle="ButtonStyle.Light" />
+                    <div class="hd-view-mode">
+                        <RadzenProfileMenu Click="HandleSwitchMode">
+                            <Template>
+                                <i title="模式切换" svg-icon="" svgname="md_switch" class="switch-icon">
+                                    <svg style="display: inline-block; width: 100%; height: 100%" role="img" class="">
+                                        <use xlink:href="#md_switch"></use>
+                                    </svg>
+                                </i>
+                            </Template>
+                            <ChildContent>
+                                <RadzenProfileMenuItem Text="分屏编辑" Icon="splitscreen" Value="@CherrydownMode.EditAndPreview.ToString()" class="md-splitscreen" />
+                                <RadzenProfileMenuItem Text="所见即所得" Icon="wysiwyg" Value="@CherrydownMode.EditOnly.ToString()" />
+                                <RadzenProfileMenuItem Text="预览模式" Icon="remove_red_eye" Value="@CherrydownMode.PreviewOnly.ToString()" />
+                            </ChildContent>
+                        </RadzenProfileMenu>
+                    </div>
                 </div>
             </div>
             if (Memo.IsDirectory)
@@ -28,7 +45,7 @@
             else
             {
                 <div class="markdown-container w-100">
-                    <Cherrydown @bind-Markdown="_markdown" OnFileUpload="@SaveFile" @ref="Editor" />
+                    <Cherrydown Markdown="@_markdown" OnFileUpload="SaveFile" @ref="Editor" />
                 </div>
             }
         }
@@ -52,9 +69,13 @@
 
     private Cherrydown Editor = default!;
 
+    private PeriodicTimer _timer;
+
     protected override void OnInitialized()
     {
         _memoService.OnSelectedMemoChanged += StateHasChanged;
+        _timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+
         base.OnInitialized();
     }
 
@@ -70,23 +91,10 @@
         base.OnAfterRender(firstRender);
     }
 
-    // protected override bool ShouldRender()
-    // {
-    //     if (Memo != null && _previousMemo?.Id != Memo?.Id)
-    //     {
-    //         _previousMemo = Memo;
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
-    async Task SwitchMode()
+    private async Task HandleSwitchMode(RadzenProfileMenuItem e)
     {
-        await Editor.SwitchModeAsync(CherrydownMode.PreviewOnly);
-
-        await Task.Delay(15 * 1000);
-
-        await Editor.SwitchModeAsync(CherrydownMode.EditAndPreview);
+        var mode = Enum.Parse<CherrydownMode>(e.Value);
+        await Editor.SwitchModeAsync(mode);
     }
 
     private async Task<FileUploadResult> SaveFile(Blazor.Cherrydown.FileUpload.IBrowserFile file)
@@ -103,5 +111,6 @@
     public void Dispose()
     {
         _memoService.OnSelectedMemoChanged -= StateHasChanged;
+        _timer.Dispose();
     }
 }
