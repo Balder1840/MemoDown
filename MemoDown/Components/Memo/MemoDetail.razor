@@ -1,4 +1,8 @@
-﻿@inject MemoService _memoService
+﻿@using Blazor.Cherrydown.FileUpload
+@inject MemoService _memoService
+@inject IConfiguration _config
+@inject MemoService _service
+
 @implements IDisposable
 
 <detail>
@@ -7,7 +11,9 @@
         {
             <div class="hd w-100">
                 <div class="title">@Memo.Name</div>
-                <div class="toolbar"></div>
+                <div class="toolbar">
+                    @Memo.FullPath
+                </div>
             </div>
             if (Memo.IsDirectory)
             {
@@ -21,7 +27,9 @@
             }
             else
             {
-                <h3>@Memo.FullPath</h3>
+                <div class="markdown-container w-100">
+                    <Cherrydown @bind-Markdown="_markdown" OnFileUpload="@SaveFile" @ref="Editor" />
+                </div>
             }
         }
         else
@@ -36,12 +44,60 @@
 </detail>
 
 @code {
-    public MemoItem? Memo => _memoService.SelectedMemo;
+    private MemoItem? Memo => _memoService.SelectedMemo;
+
+    private MemoItem? _previousMemo = null;
+
+    private string _markdown = string.Empty;
+
+    private Cherrydown Editor = default!;
 
     protected override void OnInitialized()
     {
         _memoService.OnSelectedMemoChanged += StateHasChanged;
         base.OnInitialized();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (Memo != null && _previousMemo?.Id != Memo?.Id)
+        {
+            _markdown = _service.GetMarkdownContents(Memo!);
+            _previousMemo = Memo;
+            StateHasChanged();
+        }
+
+        base.OnAfterRender(firstRender);
+    }
+
+    // protected override bool ShouldRender()
+    // {
+    //     if (Memo != null && _previousMemo?.Id != Memo?.Id)
+    //     {
+    //         _previousMemo = Memo;
+    //         return true;
+    //     }
+    //     return false;
+    // }
+
+    async Task SwitchMode()
+    {
+        await Editor.SwitchModeAsync(CherrydownMode.PreviewOnly);
+
+        await Task.Delay(15 * 1000);
+
+        await Editor.SwitchModeAsync(CherrydownMode.EditAndPreview);
+    }
+
+    private async Task<FileUploadResult> SaveFile(Blazor.Cherrydown.FileUpload.IBrowserFile file)
+    {
+        var workDir = _config.GetValue<string>("WorkDir");
+        var workDirVirtualPath = _config.GetValue<string>("WorkDirVirtualPath");
+
+        await using FileStream fs = new(Path.Combine(workDir, file.Name), FileMode.Create);
+        await file.OpenReadStream(15 * 1024 * 1024).CopyToAsync(fs); // 15M
+
+        return new FileUploadResult { FileUri = $"{workDirVirtualPath}/{file.Name}" };
     }
 
     public void Dispose()

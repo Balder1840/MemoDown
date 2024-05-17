@@ -33,3 +33,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
 }
+
+.markdown-container {
+    height: calc(100% - 56px);
+}

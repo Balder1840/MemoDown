@@ -267,5 +267,12 @@ namespace MemoDown.Services
         }
 
         #endregion
+
+        #region Methods
+        public string GetMarkdownContents(MemoItem memo)
+        {
+            return memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
+        }
+        #endregion
     }
 }

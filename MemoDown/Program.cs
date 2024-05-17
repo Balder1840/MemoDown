@@ -15,7 +15,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents()
+    .AddHubOptions(opt =>
+    {
+        // https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/signalr?view=aspnetcore-8.0#maximum-receive-message-size
+        opt.MaximumReceiveMessageSize = 1024 * 1024 * 20; // 20m, default is 32k
+    });
 
 builder.Services.AddCascadingAuthenticationState();
 
