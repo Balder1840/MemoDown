@@ -274,12 +274,12 @@ namespace MemoDown.Services
             return memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
         }
 
-        public void SaveMarkdownContents(MemoItem? memo, string? content)
+        public async Task SaveMarkdownContents(MemoItem? memo, string? content)
         {
             if (memo != null && !memo.IsDirectory && File.Exists(memo.FullPath))
             {
-                using var fs = new StreamWriter(memo.FullPath);
-                fs.Write(content);
+                await using var fs = new StreamWriter(memo.FullPath);
+                await fs.WriteAsync(content);
                 fs.Flush();
                 fs.Close();
             }

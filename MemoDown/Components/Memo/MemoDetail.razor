@@ -75,11 +75,11 @@
     protected override void OnInitialized()
     {
         _memoService.OnSelectedMemoChanged += StateHasChanged;
-        _timer = new Timer(async _ =>
-        {
-            await SaveMarkdownContent();
+        // _timer = new Timer(async _ =>
+        // {
+        //     await SaveMarkdownContent();
 
-        }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30));
+        // }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(30));
 
         base.OnInitialized();
     }
@@ -96,7 +96,7 @@
             var markdown = await Editor.GetValueAsync();
             if (_markdown != markdown)
             {
-                _service.SaveMarkdownContents(Memo, markdown);
+                await _service.SaveMarkdownContents(Memo, markdown);
 
                 _markdown = markdown;
             }
