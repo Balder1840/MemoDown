@@ -13,23 +13,26 @@
                 <div class="title">@Memo.Name</div>
                 <div class="toolbar">
                     @Memo.FullPath
-                    <RadzenButton Text="保存" IsBusy="_isSaving" BusyText="保存中" ButtonStyle="ButtonStyle.Light" Click="SaveMarkdownContent" />
-                    <div class="hd-view-mode">
-                        <RadzenProfileMenu Click="HandleSwitchMode">
-                            <Template>
-                                <i title="模式切换" svg-icon="" svgname="md_switch" class="switch-icon">
-                                    <svg style="display: inline-block; width: 100%; height: 100%" role="img" class="">
-                                        <use xlink:href="#md_switch"></use>
-                                    </svg>
-                                </i>
-                            </Template>
-                            <ChildContent>
-                                <RadzenProfileMenuItem Text="分屏编辑" Icon="splitscreen" Value="@CherrydownMode.EditAndPreview.ToString()" class="md-splitscreen" />
-                                <RadzenProfileMenuItem Text="所见即所得" Icon="wysiwyg" Value="@CherrydownMode.EditOnly.ToString()" />
-                                <RadzenProfileMenuItem Text="预览模式" Icon="remove_red_eye" Value="@CherrydownMode.PreviewOnly.ToString()" />
-                            </ChildContent>
-                        </RadzenProfileMenu>
-                    </div>
+                    @if (!Memo.IsDirectory)
+                    {
+                        <RadzenButton Text="保存" IsBusy="_isSaving" BusyText="保存中" ButtonStyle="ButtonStyle.Light" Click="SaveMarkdownContent" />
+                        <div class="hd-view-mode">
+                            <RadzenProfileMenu Click="HandleSwitchMode">
+                                <Template>
+                                    <i title="模式切换" svg-icon="" svgname="md_switch" class="switch-icon">
+                                        <svg style="display: inline-block; width: 100%; height: 100%" role="img" class="">
+                                            <use xlink:href="#md_switch"></use>
+                                        </svg>
+                                    </i>
+                                </Template>
+                                <ChildContent>
+                                    <RadzenProfileMenuItem Text="分屏编辑" Icon="splitscreen" Value="@CherrydownMode.EditAndPreview.ToString()" class="md-splitscreen" />
+                                    <RadzenProfileMenuItem Text="所见即所得" Icon="wysiwyg" Value="@CherrydownMode.EditOnly.ToString()" />
+                                    <RadzenProfileMenuItem Text="预览模式" Icon="remove_red_eye" Value="@CherrydownMode.PreviewOnly.ToString()" />
+                                </ChildContent>
+                            </RadzenProfileMenu>
+                        </div>
+                    }
                 </div>
             </div>
             if (Memo.IsDirectory)
@@ -86,7 +89,7 @@
 
     private async Task SaveMarkdownContent()
     {
-        if (!_isSaving)
+        if (Memo != null && !Memo.IsDirectory && !_isSaving)
         {
             _isSaving = true;
             await InvokeAsync(StateHasChanged);
