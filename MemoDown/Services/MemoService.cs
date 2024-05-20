@@ -284,6 +284,40 @@ namespace MemoDown.Services
                 fs.Close();
             }
         }
+
+        public IEnumerable<MemoItem>? SearchMemo(string? searchTerm = null)
+        {
+            if (SelectedSidebarMemo?.Children != null)
+            {
+                foreach (var child in SelectedSidebarMemo.Children)
+                {
+                    if (!string.IsNullOrWhiteSpace(searchTerm))
+                    {
+                        if (child.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                        {
+                            yield return child;
+                        }
+                        else if (!child.IsDirectory && File.Exists(child.FullPath))
+                        {
+                            using var sr = new StreamReader(child.FullPath);
+                            string? line;
+                            while ((line = sr.ReadLine()) != null)
+                            {
+                                if (!string.IsNullOrWhiteSpace(line) && line.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    yield return child;
+                                    yield break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        yield return child;
+                    }
+                }
+            }
+        }
         #endregion
     }
 }

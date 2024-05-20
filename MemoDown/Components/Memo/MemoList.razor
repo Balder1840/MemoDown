@@ -96,12 +96,7 @@
     private IEnumerable<MemoItem>? SearchMemo(string? searchTerm = null)
     {
         _filter = searchTerm;
-        if (!string.IsNullOrWhiteSpace(searchTerm) && SidebarMemo?.Children != null && SidebarMemo.Children.Any())
-        {
-            return SidebarMemo.Children.Where(m => m.Name.Contains(searchTerm));
-        }
-
-        return SidebarMemo?.Children;
+        return _memoService.SearchMemo(searchTerm);
     }
 
     public void OnMemoItemClick(MemoMenuItemEventArgs args)
