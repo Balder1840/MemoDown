@@ -74,51 +74,64 @@
 
     private Timer? _timer;
     private bool _isSaving;
+    private TimeSpan _autoSavingDueTime = TimeSpan.FromSeconds(5);
+    private TimeSpan _autoSavingIntervalTime;
 
     protected override void OnInitialized()
     {
-        _memoService.OnSelectedMemoChanged += StateHasChanged;
+        _autoSavingIntervalTime = TimeSpan.FromSeconds(_options.Value.AutoSavingIntervalSecond);
+
+        _memoService.OnSelectedMemoChanged += OnSelectedMemoChanged;
         _timer = new Timer(async _ =>
         {
             await SaveMarkdownContent();
 
-        }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(_options.Value.AutoSavingIntervalSecond));
+        }, null, _autoSavingDueTime, _autoSavingIntervalTime);
+
+        _markdown = _service.GetMarkdownContents(Memo);
 
         base.OnInitialized();
     }
 
     private async Task SaveMarkdownContent()
     {
-        if (Memo != null && !Memo.IsDirectory && !_isSaving)
+        try
         {
-            _isSaving = true;
-            await InvokeAsync(StateHasChanged);
-
-            await Task.Delay(200);
-
-            var markdown = await Editor.GetValueAsync();
-            if (_markdown != markdown)
+            if (Memo != null && !Memo.IsDirectory && !_isSaving && Editor != null)
             {
-                await _service.SaveMarkdownContents(Memo, markdown);
+                _isSaving = true;
+                await InvokeAsync(StateHasChanged);
 
-                _markdown = markdown;
+                await Task.Delay(200);
+
+                var markdown = await Editor.GetValueAsync();
+                if (_markdown != markdown)
+                {
+                    await _service.SaveMarkdownContents(Memo, markdown);
+
+                    _markdown = markdown;
+                }
+
+                _isSaving = false;
+                await InvokeAsync(StateHasChanged);
             }
-
-            _isSaving = false;
-            await InvokeAsync(StateHasChanged);
         }
+        catch { }
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    private void OnSelectedMemoChanged()
     {
-        if (Memo != null && _previousMemo?.Id != Memo?.Id)
+        if (Memo == null || Memo.IsDirectory)
         {
-            _markdown = _service.GetMarkdownContents(Memo!);
-            _previousMemo = Memo;
-            StateHasChanged();
+            _timer?.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+        else
+        {
+            _timer?.Change(_autoSavingDueTime, _autoSavingIntervalTime);
         }
 
-        base.OnAfterRender(firstRender);
+        _markdown = _service.GetMarkdownContents(Memo);
+        StateHasChanged();
     }
 
     private async Task HandleSwitchMode(RadzenProfileMenuItem e)
@@ -140,7 +153,7 @@
 
     public void Dispose()
     {
-        _memoService.OnSelectedMemoChanged -= StateHasChanged;
+        _memoService.OnSelectedMemoChanged -= OnSelectedMemoChanged;
         _timer?.Dispose();
     }
 }
