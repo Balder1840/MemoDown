@@ -46,7 +46,7 @@ namespace MemoDown.Store
             }
 
             var subDirs = Directory.GetDirectories(dir, "*", searchOption: SearchOption.TopDirectoryOnly);
-            foreach (var subDir in subDirs.Where(_ => !_.EndsWith("_docs", StringComparison.OrdinalIgnoreCase)))
+            foreach (var subDir in subDirs.Where(_ => !_.EndsWith(_options.Value.UploadsDir, StringComparison.OrdinalIgnoreCase)))
             {
                 var dirInfo = new DirectoryInfo(subDir);
                 var memo = new MemoItem
