@@ -1,4 +1,7 @@
-﻿@inject MemoService _memoService
+﻿@using System.Reactive.Subjects
+@using System.Reactive.Linq
+
+@inject MemoService _memoService
 @* @inject Radzen.ContextMenuService ContextMenuService *@
 @inject ContextMenuService _contextMenuService
 @implements IDisposable
@@ -11,7 +14,7 @@
                     <RadzenIcon Icon="search" />
                 </Start>
                 <ChildContent>
-                    <RadzenTextBox type="search" AutoComplete="false" Placeholder="搜索笔记" />
+                    <RadzenTextBox Value="@_filter" @oninput="searchTerm.OnNext" type="search" AutoComplete="false" Placeholder="搜索笔记" />
                 </ChildContent>
             </RadzenFormField>
         </div>
@@ -22,10 +25,10 @@
             </div>
         }
 
-        @if (SidebarMemo?.Children != null && SidebarMemo.Children.Any())
+        @if (memos != null && memos.Any())
         {
             <MemoPanelMenu class="rz-scrollbars w-100">
-                <MemoItems Memos="SidebarMemo?.Children"
+                <MemoItems Memos="memos"
                            CurrentMemo="Selection"
                            OnMenuItemClick=@OnMemoItemClick
                            OnMemoContextMenu="OnOpenContextMenu"
@@ -46,13 +49,59 @@
 </list>
 
 @code {
-    private MemoItem? SidebarMemo => _memoService.SelectedSidebarMemo;
+    private MemoItem? SidebarMemo;
     private MemoItem? Selection => _memoService.SelectedMemo;
+
+    private Subject<ChangeEventArgs> searchTerm = new();
+    private IDisposable? subscription;
+    private IEnumerable<MemoItem>? memos;
+    private string? _filter;
 
     protected override void OnInitialized()
     {
+        _memoService.OnSelectedSidebarMemoChanged += OndSidebarMemoChanged;
         _memoService.OnSelectedMemoChanged += StateHasChanged;
+
+        SidebarMemo = _memoService.SelectedSidebarMemo;
+        memos = SidebarMemo?.Children;
+
+        subscription = searchTerm
+           .Throttle(TimeSpan.FromMilliseconds(350))
+           .Select(e => (string?)e.Value)
+           .Select(v => v?.Trim())
+           .DistinctUntilChanged()
+           .Select(SearchMemo)
+           .Subscribe(ts =>
+           {
+               memos = ts;
+               InvokeAsync(() =>
+               {
+                   _memoService.SetSelectedMemo(memos?.FirstOrDefault());
+               });
+           });
+
         base.OnInitialized();
+    }
+
+    private void OndSidebarMemoChanged()
+    {
+        SidebarMemo = _memoService.SelectedSidebarMemo;
+        memos = SidebarMemo?.Children;
+        _filter = null;
+        searchTerm.OnNext(new ChangeEventArgs());
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private IEnumerable<MemoItem>? SearchMemo(string? searchTerm = null)
+    {
+        _filter = searchTerm;
+        if (!string.IsNullOrWhiteSpace(searchTerm) && SidebarMemo?.Children != null && SidebarMemo.Children.Any())
+        {
+            return SidebarMemo.Children.Where(m => m.Name.Contains(searchTerm));
+        }
+
+        return SidebarMemo?.Children;
     }
 
     public void OnMemoItemClick(MemoMenuItemEventArgs args)
@@ -73,7 +122,9 @@
 
     public void Dispose()
     {
+        _memoService.OnSelectedMemoChanged -= OndSidebarMemoChanged;
         _memoService.OnSelectedMemoChanged -= StateHasChanged;
+        subscription?.Dispose();
     }
 
     // void ShowContextMenuWithContent(MemoContextMenuArgs args) => ContextMenuService.Open(args.MouseArgs, ds =>

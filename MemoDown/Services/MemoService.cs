@@ -269,9 +269,9 @@ namespace MemoDown.Services
         #endregion
 
         #region Methods
-        public string GetMarkdownContents(MemoItem memo)
+        public string GetMarkdownContents(MemoItem? memo)
         {
-            return memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
+            return memo == null || memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
         }
 
         public async Task SaveMarkdownContents(MemoItem? memo, string? content)
