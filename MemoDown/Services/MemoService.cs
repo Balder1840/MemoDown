@@ -1,4 +1,5 @@
-﻿using MemoDown.Constants;
+﻿using Blazor.Cherrydown.FileUpload;
+using MemoDown.Constants;
 using MemoDown.Models;
 using MemoDown.Options;
 using MemoDown.Store;
@@ -317,6 +318,21 @@ namespace MemoDown.Services
                     }
                 }
             }
+        }
+
+        public async Task<FileUploadResult> SaveUploadFile(IBrowserFile file)
+        {
+            var fileNameWithoutExtension = SelectedMemo!.Name.TrimEnd(MemoConstants.FILE_EXTENSION.ToCharArray());
+            var dir = Path.Combine(_options.Value.MemoDir, _options.Value.UploadsDir, fileNameWithoutExtension);
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            await using FileStream fs = new(Path.Combine(dir, file.Name), FileMode.Create);
+            await file.OpenReadStream(25 * 1024 * 1024).CopyToAsync(fs); // 15M
+
+            return new FileUploadResult { FileUri = $"{_options.Value.UploadsVirtualPath}/{fileNameWithoutExtension}/{file.Name}" };
         }
         #endregion
     }

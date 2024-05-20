@@ -1,6 +1,5 @@
 ﻿@using Blazor.Cherrydown.FileUpload
 @inject MemoService _memoService
-@inject IConfiguration _config
 @inject MemoService _service
 @inject IOptions<MemoDownOptions> _options
 @implements IDisposable
@@ -48,7 +47,7 @@
             else
             {
                 <div class="markdown-container w-100">
-                    <Cherrydown Markdown="@_markdown" OnFileUpload="SaveFile" @ref="Editor" />
+                    <Cherrydown Markdown="@_markdown" OnFileUpload="_memoService.SaveUploadFile" @ref="Editor" />
                 </div>
             }
         }
@@ -138,17 +137,6 @@
     {
         var mode = Enum.Parse<CherrydownMode>(e.Value);
         await Editor.SwitchModeAsync(mode);
-    }
-
-    private async Task<FileUploadResult> SaveFile(Blazor.Cherrydown.FileUpload.IBrowserFile file)
-    {
-        var workDir = _config.GetValue<string>("WorkDir");
-        var workDirVirtualPath = _config.GetValue<string>("WorkDirVirtualPath");
-
-        await using FileStream fs = new(Path.Combine(workDir, file.Name), FileMode.Create);
-        await file.OpenReadStream(15 * 1024 * 1024).CopyToAsync(fs); // 15M
-
-        return new FileUploadResult { FileUri = $"{workDirVirtualPath}/{file.Name}" };
     }
 
     public void Dispose()

@@ -10,6 +10,8 @@ using System.Security.Claims;
 using NotificationService = MemoDown.Services.NotificationService;
 using ContextMenuService = MemoDown.Services.ContextMenuService;
 using DialogService = MemoDown.Services.DialogService;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +21,7 @@ builder.Services.AddRazorComponents()
     .AddHubOptions(opt =>
     {
         // https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/signalr?view=aspnetcore-8.0#maximum-receive-message-size
-        opt.MaximumReceiveMessageSize = 1024 * 1024 * 20; // 20m, default is 32k
+        opt.MaximumReceiveMessageSize = 1024 * 1024 * 25; // 20m, default is 32k
     });
 
 builder.Services.AddCascadingAuthenticationState();
@@ -72,6 +74,18 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+
+// used for uploading, define a new request path
+var memoDownOptions = app.Services.GetRequiredService<IOptions<MemoDownOptions>>().Value;
+if (!string.IsNullOrWhiteSpace(memoDownOptions.UploadsDir))
+{
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(Path.Combine(memoDownOptions.MemoDir, memoDownOptions.UploadsDir)),
+        RequestPath = $"/{memoDownOptions.UploadsVirtualPath}"
+    });
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

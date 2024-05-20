@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blazor.Cherrydown" Version="0.1.15" />
+    <PackageReference Include="Blazor.Cherrydown" Version="0.1.16" />
     <PackageReference Include="Radzen.Blazor" Version="4.30.3" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
   </ItemGroup>
