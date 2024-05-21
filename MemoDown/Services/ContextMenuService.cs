@@ -34,7 +34,7 @@ namespace MemoDown.Services
             new List<ContextMenuItem> {
                 new ContextMenuItem(){ Text = MemoConstants.NEW_FILE, Value = MemuEnum.CreateNote, Image="/images/markdown_20x20.png", ImageStyle="margin-right:0.5rem;" },
                 new ContextMenuItem(){ Text = MemoConstants.NEW_DIRECTORY, Value = MemuEnum.CreateDiretory, Icon = "folder" } },
-            menuArgs => OnMenuItemClick(menuArgs, _memoService.SelectedSidebarMemo));
+            async menuArgs => await OnMenuItemClick(menuArgs, _memoService.SelectedSidebarMemo));
         }
 
         public void HandleOpenContextMenu(MemoContextMenuArgs args)
@@ -87,18 +87,26 @@ namespace MemoDown.Services
             {
                 case MemuEnum.CreateNote:
                     {
-                        var memo = _memoService.CreateFile(selection, !selection.IsDirectory);
-                        _memoService.SetSelectedSidebarMemo(memo?.Parent);
-                        _memoService.SetSelectedMemo(memo);
-                        _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                        var name = await _dialogService.ShowNamingDialog();
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            var memo = _memoService.CreateFile(selection, name, !selection.IsDirectory);
+                            _memoService.SetSelectedSidebarMemo(memo?.Parent);
+                            _memoService.SetSelectedMemo(memo);
+                            _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                        }
                         break;
                     }
                 case MemuEnum.CreateDiretory:
                     {
-                        var memo = _memoService.CreateDirectory(selection, !selection.IsDirectory);
-                        _memoService.SetSelectedSidebarMemo(memo);
-                        _memoService.SetSelectedMemo(memo);
-                        _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                        var name = await _dialogService.ShowNamingDialog(category: "文件夹");
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            var memo = _memoService.CreateDirectory(selection, name, !selection.IsDirectory);
+                            _memoService.SetSelectedSidebarMemo(memo);
+                            _memoService.SetSelectedMemo(memo);
+                            _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                        }
                         break;
                     }
                 case MemuEnum.Delete:
@@ -117,11 +125,10 @@ namespace MemoDown.Services
                     break;
             }
 
-            _notificationService.Notify(NotificationSeverity.Success, $"{args.Text}-{selection.FullPath}");
             _contextMenuService.Close();
         }
 
-        private void OnMenuItemClick(MenuItemEventArgs args, MemoItem? selection)
+        private async Task OnMenuItemClick(MenuItemEventArgs args, MemoItem? selection)
         {
             var menu = (MemuEnum)args.Value;
 
@@ -129,19 +136,27 @@ namespace MemoDown.Services
             {
                 case MemuEnum.CreateNote:
                     {
-                        var memo = _memoService.CreateFile(selection);
-                        _memoService.SetSelectedMemo(memo);
+                        var name = await _dialogService.ShowNamingDialog();
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            var memo = _memoService.CreateFile(selection, name);
+                            _memoService.SetSelectedMemo(memo);
 
-                        _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                            _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                        }
                         break;
                     }
                 case MemuEnum.CreateDiretory:
                     {
-                        var memo = _memoService.CreateDirectory(selection);
-                        _memoService.SetSelectedSidebarMemo(memo);
-                        _memoService.SetSelectedMemo(memo);
+                        var name = await _dialogService.ShowNamingDialog(category: "文件夹");
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            var memo = _memoService.CreateDirectory(selection, name);
+                            _memoService.SetSelectedSidebarMemo(memo);
+                            _memoService.SetSelectedMemo(memo);
 
-                        _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                            _notificationService.Notify(NotificationSeverity.Success, "创建成功！");
+                        }
                         break;
                     }
                 default:

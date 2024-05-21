@@ -4,6 +4,7 @@
 @inject MemoService _memoService
 @* @inject Radzen.ContextMenuService ContextMenuService *@
 @inject ContextMenuService _contextMenuService
+@inject DialogService _dialogService
 @implements IDisposable
 
 <list>
@@ -109,10 +110,15 @@
         _contextMenuService.HandleOpenContextMenu(args);
     }
 
-    void OnBtnAddClick(MouseEventArgs args)
+    async Task OnBtnAddClick(MouseEventArgs args)
     {
-        var memo = _memoService.CreateFile(_memoService.SelectedSidebarMemo);
-        _memoService.SetSelectedMemo(memo);
+        var name = await _dialogService.ShowNamingDialog();
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            var memo = _memoService.CreateFile(_memoService.SelectedSidebarMemo, name);
+            memos = _memoService.SelectedSidebarMemo?.Children;
+            _memoService.SetSelectedMemo(memo);
+        }
     }
 
     public void Dispose()

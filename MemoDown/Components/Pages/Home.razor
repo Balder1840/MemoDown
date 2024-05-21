@@ -9,6 +9,8 @@
 
 @inject MemoService _service
 
+@* @inject Radzen.DialogService dialogService *@
+
 <RadzenSplitter>
     <RadzenSplitterPane Size="250px" Min="50px" Max="400px" class="h-100">
         <Sidebar />
@@ -20,7 +22,48 @@
             </RadzenSplitterPane>
             <RadzenSplitterPane Collapsible="false">
                 <MemoDetail />
+                @* <RadzenButton Text="Dialog with inline Blazor content" ButtonStyle="ButtonStyle.Secondary" Click=@(()=>ShowInlineDialog()) /> *@
             </RadzenSplitterPane>
         </RadzenSplitter>
     </RadzenSplitterPane>
 </RadzenSplitter>
+
+ @* @code {
+    async Task<string?> ShowInlineDialog(string category = "文件夹")
+    {
+        var title = $"新建{category}";
+        var validationMsg = $"请输入{category}名称！";
+        string name = string.Empty;
+
+        var result = await dialogService.OpenAsync(title, ds =>
+    @<RadzenTemplateForm TItem="string" Data="@name" Submit="@(()=> ds.Close(name))">
+        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem" JustifyContent="JustifyContent.SpaceBetween">
+            <RadzenStack Orientation="Orientation.Horizontal" Style="height:54px">
+                <RadzenText Text="名称：" Style="padding-top:var(--rz-input-padding)" />
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="flex-grow-1">
+                    <RadzenTextBox Name="Name" @bind-Value="@name" />
+                    <RadzenRequiredValidator Component="Name" Text="@validationMsg" />
+                </RadzenStack>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center">
+                <RadzenButton Text="确定" ButtonType="ButtonType.Submit" Style="width: 80px;" />
+                <RadzenButton Text="取消" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Light" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenTemplateForm>
+    ,
+    new DialogOptions
+    {
+        Width = "400px",
+        CloseDialogOnEsc = false,
+        ShowClose = false,
+        Height = "210px"
+    });
+
+        if (result?.GetType() == typeof(string))
+        {
+            return result as string;
+        }
+        return null;
+    }
+} *@

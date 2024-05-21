@@ -96,10 +96,11 @@ namespace MemoDown.Services
         #endregion
 
         #region Memu Handler
-        public MemoItem? CreateFile(MemoItem? selection, bool createInParent = false)
+        public MemoItem? CreateFile(MemoItem? selection, string? newFileName, bool createInParent = false)
         {
             string? dir = null;
             MemoItem? newMemo = null;
+            newFileName ??= MemoConstants.NEW_FILE;
 
             if (createInParent)
             {
@@ -113,12 +114,12 @@ namespace MemoDown.Services
             dir ??= _options.Value.MemoDir;
 
             var fileIndex = 0;
-            var fileName = $"{MemoConstants.NEW_FILE}{MemoConstants.FILE_EXTENSION}";
+            var fileName = $"{newFileName}{MemoConstants.FILE_EXTENSION}";
             var fullName = Path.Combine(dir, fileName);
             while (File.Exists(fullName))
             {
                 fileIndex++;
-                fileName = $"{MemoConstants.NEW_FILE}{fileIndex}{MemoConstants.FILE_EXTENSION}";
+                fileName = $"{newFileName}{fileIndex}{MemoConstants.FILE_EXTENSION}";
                 fullName = Path.Combine(dir, fileName);
             }
 
@@ -165,10 +166,11 @@ namespace MemoDown.Services
             return newMemo;
         }
 
-        public MemoItem? CreateDirectory(MemoItem? selection, bool createInParent = false)
+        public MemoItem? CreateDirectory(MemoItem? selection, string? newDirName, bool createInParent = false)
         {
             string? dir = null;
             MemoItem? newMemo = null;
+            newDirName ??= MemoConstants.NEW_DIRECTORY;
 
             if (createInParent)
             {
@@ -182,12 +184,12 @@ namespace MemoDown.Services
             dir ??= _options.Value.MemoDir;
 
             var dirIndex = 0;
-            var dirName = MemoConstants.NEW_DIRECTORY;
+            var dirName = newDirName;
             var fullName = Path.Combine(dir, dirName);
             while (Directory.Exists(fullName))
             {
                 dirIndex++;
-                dirName = $"{MemoConstants.NEW_DIRECTORY}{dirIndex}";
+                dirName = $"{newDirName}{dirIndex}";
                 fullName = Path.Combine(dir, dirName);
             }
 
@@ -272,7 +274,14 @@ namespace MemoDown.Services
         #region Methods
         public string GetMarkdownContents(MemoItem? memo)
         {
-            return memo == null || memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
+            try
+            {
+                return memo == null || memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
+            }
+            catch (IOException ex)
+            {
+                return string.Empty;
+            }
         }
 
         public async Task SaveMarkdownContents(MemoItem? memo, string? content)
@@ -283,6 +292,7 @@ namespace MemoDown.Services
                 await fs.WriteAsync(content);
                 fs.Flush();
                 fs.Close();
+                fs.Dispose();
             }
         }
 
@@ -310,6 +320,9 @@ namespace MemoDown.Services
                                     yield break;
                                 }
                             }
+
+                            sr.Close();
+                            sr.Dispose();
                         }
                     }
                     else
@@ -330,7 +343,7 @@ namespace MemoDown.Services
             }
 
             await using FileStream fs = new(Path.Combine(dir, file.Name), FileMode.Create);
-            await file.OpenReadStream(25 * 1024 * 1024).CopyToAsync(fs); // 15M
+            await file.OpenReadStream(25 * 1024 * 1024).CopyToAsync(fs); // 25M
 
             return new FileUploadResult { FileUri = $"{_options.Value.UploadsVirtualPath}/{fileNameWithoutExtension}/{file.Name}" };
         }
