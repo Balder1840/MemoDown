@@ -125,7 +125,7 @@ namespace MemoDown.Services
 
             if (!File.Exists(fullName))
             {
-                File.Create(fullName);
+                var fs = File.Create(fullName);
                 if (createInParent)
                 {
                     newMemo = new MemoItem
@@ -161,6 +161,10 @@ namespace MemoDown.Services
                     }
                     selection?.Children?.Add(newMemo);
                 }
+
+                fs.Flush();
+                fs.Close();
+                fs.Dispose();
             }
 
             return newMemo;
