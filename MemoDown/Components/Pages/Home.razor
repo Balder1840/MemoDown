@@ -22,18 +22,18 @@
             </RadzenSplitterPane>
             <RadzenSplitterPane Collapsible="false">
                 <MemoDetail />
-                @* <RadzenButton Text="Dialog with inline Blazor content" ButtonStyle="ButtonStyle.Secondary" Click=@(()=>ShowInlineDialog()) /> *@
+                @* <RadzenButton Text="Dialog with inline Blazor content" ButtonStyle="ButtonStyle.Secondary" Click=@(() => ShowInlineDialog()) /> *@
             </RadzenSplitterPane>
         </RadzenSplitter>
     </RadzenSplitterPane>
 </RadzenSplitter>
 
  @* @code {
-    async Task<string?> ShowInlineDialog(string category = "文件夹")
+    async Task<string?> ShowInlineDialog(string category = "文件夹", string? initialName = null)
     {
         var title = $"新建{category}";
         var validationMsg = $"请输入{category}名称！";
-        string name = string.Empty;
+        string name = initialName ?? string.Empty;
 
         var result = await dialogService.OpenAsync(title, ds =>
     @<RadzenTemplateForm TItem="string" Data="@name" Submit="@(()=> ds.Close(name))">
@@ -43,6 +43,7 @@
                 <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="flex-grow-1">
                     <RadzenTextBox Name="Name" @bind-Value="@name" />
                     <RadzenRequiredValidator Component="Name" Text="@validationMsg" />
+                    <RadzenCompareValidator Value="@initialName" Component="Name" Operator="CompareOperator.NotEqual" Text="名称不能与之前相同！" Visible="@(!string.IsNullOrWhiteSpace(initialName))" />
                 </RadzenStack>
             </RadzenStack>
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" AlignItems="AlignItems.Center">

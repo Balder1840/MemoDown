@@ -270,7 +270,18 @@ namespace MemoDown.Services
                     SetSelectedMemoFromSidebar();
                 }
             }
+        }
 
+        public void Rename(MemoItem selection)
+        {
+            if (selection.IsDirectory)
+            {
+
+            }
+            else
+            {
+
+            }
         }
 
         #endregion

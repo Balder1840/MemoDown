@@ -120,6 +120,18 @@ namespace MemoDown.Services
                         }
                         break;
                     }
+                case MemuEnum.Rename:
+                    {
+                        var category = selection.IsDirectory ? "文件夹" : "笔记";
+                        var initialName = selection.IsDirectory ? selection.Name : selection.Name.TrimEnd(MemoConstants.FILE_EXTENSION.ToCharArray());
+                        var name = await _dialogService.ShowNamingDialog(operation: "重命名", category: category, initialName: initialName);
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            _memoService.Rename(selection);
+                            _notificationService.Notify(NotificationSeverity.Success, "重命名成功！");
+                        }
+                        break;
+                    }
                 default:
                     _notificationService.Notify(NotificationSeverity.Error, "未知菜单类型！");
                     break;

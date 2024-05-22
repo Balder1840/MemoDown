@@ -32,11 +32,11 @@ namespace MemoDown.Services
             });
         }
 
-        public async Task<string?> ShowNamingDialog(string operation = "新建", string category = "笔记")
+        public async Task<string?> ShowNamingDialog(string operation = "新建", string category = "笔记", string? initialName = null)
         {
             var title = $"{operation}{category}";
             var validationMsg = $"请输入{category}名称！";
-            var name = string.Empty;
+            var name = initialName ?? string.Empty;
 
             RenderFragment<RadzenDialogService> dialogComponent = ds => __builder2 =>
             {
@@ -84,30 +84,38 @@ namespace MemoDown.Services
                                 __builder6.AddComponentParameter(658, "Component", "Name");
                                 __builder6.AddComponentParameter(659, "Text", RuntimeHelpers.TypeCheck(validationMsg));
                                 __builder6.CloseComponent();
+                                __builder6.AddMarkupContent(660, "\r\n                    ");
+                                __builder6.OpenComponent<RadzenCompareValidator>(661);
+                                __builder6.AddComponentParameter(662, "Value", RuntimeHelpers.TypeCheck(initialName));
+                                __builder6.AddComponentParameter(663, "Component", "Name");
+                                __builder6.AddComponentParameter(664, "Operator", RuntimeHelpers.TypeCheck(CompareOperator.NotEqual));
+                                __builder6.AddComponentParameter(665, "Text", "名称不能与之前相同！");
+                                __builder6.AddComponentParameter(666, "Visible", RuntimeHelpers.TypeCheck(!string.IsNullOrWhiteSpace(initialName)));
+                                __builder6.CloseComponent();
                             });
                             __builder5.CloseComponent();
                         });
                         __builder4.CloseComponent();
-                        __builder4.AddMarkupContent(660, "\r\n            ");
-                        __builder4.OpenComponent<RadzenStack>(661);
-                        __builder4.AddComponentParameter(662, "Orientation", RuntimeHelpers.TypeCheck(Orientation.Horizontal));
-                        __builder4.AddComponentParameter(663, "JustifyContent", RuntimeHelpers.TypeCheck(JustifyContent.End));
-                        __builder4.AddComponentParameter(664, "AlignItems", RuntimeHelpers.TypeCheck(AlignItems.Center));
-                        __builder4.AddAttribute(665, "ChildContent", (RenderFragment)delegate (RenderTreeBuilder __builder5)
+                        __builder4.AddMarkupContent(667, "\r\n            ");
+                        __builder4.OpenComponent<RadzenStack>(668);
+                        __builder4.AddComponentParameter(669, "Orientation", RuntimeHelpers.TypeCheck(Orientation.Horizontal));
+                        __builder4.AddComponentParameter(670, "JustifyContent", RuntimeHelpers.TypeCheck(JustifyContent.End));
+                        __builder4.AddComponentParameter(671, "AlignItems", RuntimeHelpers.TypeCheck(AlignItems.Center));
+                        __builder4.AddAttribute(672, "ChildContent", (RenderFragment)delegate (RenderTreeBuilder __builder5)
                         {
-                            __builder5.OpenComponent<RadzenButton>(666);
-                            __builder5.AddComponentParameter(667, "Text", "确定");
-                            __builder5.AddComponentParameter(668, "ButtonType", RuntimeHelpers.TypeCheck(ButtonType.Submit));
-                            __builder5.AddComponentParameter(669, "Style", "width: 80px;");
+                            __builder5.OpenComponent<RadzenButton>(673);
+                            __builder5.AddComponentParameter(674, "Text", "确定");
+                            __builder5.AddComponentParameter(675, "ButtonType", RuntimeHelpers.TypeCheck(ButtonType.Submit));
+                            __builder5.AddComponentParameter(676, "Style", "width: 80px;");
                             __builder5.CloseComponent();
-                            __builder5.AddMarkupContent(670, "\r\n                ");
-                            __builder5.OpenComponent<RadzenButton>(671);
-                            __builder5.AddComponentParameter(672, "Text", "取消");
-                            __builder5.AddComponentParameter(673, "Click", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create<MouseEventArgs>((object)this, (Action)delegate
+                            __builder5.AddMarkupContent(677, "\r\n                ");
+                            __builder5.OpenComponent<RadzenButton>(678);
+                            __builder5.AddComponentParameter(679, "Text", "取消");
+                            __builder5.AddComponentParameter(680, "Click", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create<MouseEventArgs>((object)this, (Action)delegate
                             {
                                 ds.Close(false);
                             })));
-                            __builder5.AddComponentParameter(674, "ButtonStyle", RuntimeHelpers.TypeCheck(ButtonStyle.Light));
+                            __builder5.AddComponentParameter(681, "ButtonStyle", RuntimeHelpers.TypeCheck(ButtonStyle.Light));
                             __builder5.CloseComponent();
                         });
                         __builder4.CloseComponent();
@@ -115,7 +123,7 @@ namespace MemoDown.Services
                     __builder3.CloseComponent();
                 }));
                 __builder2.CloseComponent();
-                __builder2.AddMarkupContent(675, "\r\n");
+                __builder2.AddMarkupContent(682, "\r\n");
             };
 
             var result = await _dialogService.OpenAsync(title, dialogComponent, new DialogOptions
