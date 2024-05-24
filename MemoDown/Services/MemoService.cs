@@ -1,5 +1,6 @@
 ﻿using Blazor.Cherrydown.FileUpload;
 using MemoDown.Constants;
+using MemoDown.Extensions;
 using MemoDown.Models;
 using MemoDown.Options;
 using MemoDown.Store;
@@ -272,7 +273,7 @@ namespace MemoDown.Services
             }
         }
 
-        public void Rename(MemoItem selection)
+        public async Task Rename(string oldName, string newName, MemoItem selection)
         {
             if (selection.IsDirectory)
             {
@@ -280,7 +281,50 @@ namespace MemoDown.Services
             }
             else
             {
+                if (File.Exists(selection.FullPath))
+                {
+                    var oldFileName = $"{oldName}{MemoConstants.FILE_EXTENSION}";
+                    var newFileName = $"{newName}{MemoConstants.FILE_EXTENSION}";
 
+                    var oldFullPath = selection.FullPath;
+                    var newFullPath = selection.FullPath.Replace(oldFileName, newFileName);
+
+                    var relativeUploadsDir = GetRelativeUploadsDir(selection);
+                    var oldDir = Path.Combine(_options.Value.MemoDir, relativeUploadsDir);
+
+                    var relativeUrl = GetRelativeUploadsUrl(relativeUploadsDir);
+                    var oldUrl = $"/{relativeUrl}/";
+
+                    // 1. update memo in memory
+                    selection.Name = newFileName;
+                    selection.FullPath = newFullPath;
+
+                    // 2. rename memo md file
+                    File.Move(oldFullPath, newFullPath, true);
+
+                    // 3. rename uploads dir
+                    relativeUploadsDir = GetRelativeUploadsDir(selection);
+                    var newDir = Path.Combine(_options.Value.MemoDir, relativeUploadsDir);
+
+                    if (Directory.Exists(oldDir))
+                    {
+                        Directory.Move(oldDir, newDir);
+                    }
+
+                    // 4. replace md file contents
+                    relativeUrl = GetRelativeUploadsUrl(relativeUploadsDir);
+                    var newUrl = $"/{relativeUrl}/";
+
+                    var content = await File.ReadAllTextAsync(newFullPath);
+
+                    var newContent = content?.Replace(oldUrl, newUrl);
+                    if (newContent != content)
+                    {
+                        await File.WriteAllTextAsync(selection.FullPath, newContent);
+                    }
+
+                    NotifySelectedMemoChanged();
+                }
             }
         }
 
@@ -350,8 +394,8 @@ namespace MemoDown.Services
 
         public async Task<FileUploadResult> SaveUploadFile(IBrowserFile file)
         {
-            var fileNameWithoutExtension = SelectedMemo!.Name.TrimEnd(MemoConstants.FILE_EXTENSION.ToCharArray());
-            var dir = Path.Combine(_options.Value.MemoDir, _options.Value.UploadsDir, fileNameWithoutExtension);
+            var relativeUploadsDir = GetRelativeUploadsDir(SelectedMemo!);
+            var dir = Path.Combine(_options.Value.MemoDir, relativeUploadsDir);
             if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
@@ -360,7 +404,19 @@ namespace MemoDown.Services
             await using FileStream fs = new(Path.Combine(dir, file.Name), FileMode.Create);
             await file.OpenReadStream(25 * 1024 * 1024).CopyToAsync(fs); // 25M
 
-            return new FileUploadResult { FileUri = $"{_options.Value.UploadsVirtualPath}/{fileNameWithoutExtension}/{file.Name}" };
+            var relativeUrl = GetRelativeUploadsUrl(relativeUploadsDir);
+            return new FileUploadResult { FileUri = $"/{relativeUrl}/{file.Name}" };
+        }
+
+        private string GetRelativeUploadsUrl(string url)
+        {
+            return url.Replace(@"\", "/");
+        }
+
+        private string GetRelativeUploadsDir(MemoItem selection)
+        {
+            var absolutepath = selection.FullPath.TrimEnd(MemoConstants.FILE_EXTENSION);
+            return Path.Combine(_options.Value.UploadsDir, Path.GetRelativePath(_options.Value.MemoDir, absolutepath));
         }
         #endregion
     }
