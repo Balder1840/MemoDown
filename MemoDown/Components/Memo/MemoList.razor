@@ -77,7 +77,10 @@
                memos = ts;
                InvokeAsync(() =>
                {
-                   _memoService.SetSelectedMemo(memos?.FirstOrDefault());
+                   if (!(_memoService.SelectedMemo != null && memos != null && memos.Any(m => m.Id == _memoService.SelectedMemo.Id)))
+                   {
+                       _memoService.SetSelectedMemo(memos?.FirstOrDefault());
+                   }
                });
            });
 
