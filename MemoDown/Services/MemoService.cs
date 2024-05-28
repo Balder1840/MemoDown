@@ -424,14 +424,16 @@ namespace MemoDown.Services
 
         public string GetMarkdownContents(MemoItem? memo)
         {
+#pragma warning disable CS0168 // Variable is declared but never used
             try
             {
                 return memo == null || memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
             }
-            catch (IOException ex)
+            catch (IOException _)
             {
                 return string.Empty;
             }
+#pragma warning restore CS0168 // Variable is declared but never used
         }
 
         public async Task SaveMarkdownContents(MemoItem? memo, string? content)

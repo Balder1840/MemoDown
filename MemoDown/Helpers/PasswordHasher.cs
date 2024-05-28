@@ -18,7 +18,7 @@ namespace MemoDown.Helpers
          * (All UInt32s are stored big-endian.)
          */
 
-        private readonly PasswordHasherCompatibilityMode _compatibilityMode;
+        //private readonly PasswordHasherCompatibilityMode _compatibilityMode;
         private readonly int _iterCount;
         private readonly RandomNumberGenerator _rng;
 
@@ -28,7 +28,7 @@ namespace MemoDown.Helpers
         /// <param name="optionsAccessor">The options for this instance.</param>
         public PasswordHasher()
         {
-            _compatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
+            //_compatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
             _iterCount = 100_000;
             _rng = RandomNumberGenerator.Create(); // secure PRNG;
         }
