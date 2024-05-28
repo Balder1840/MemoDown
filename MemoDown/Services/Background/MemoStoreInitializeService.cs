@@ -1,5 +1,6 @@
-﻿
-namespace MemoDown.Store
+﻿using MemoDown.Store;
+
+namespace MemoDown.Services.Background
 {
     public class MemoStoreInitializeService : IHostedLifecycleService
     {

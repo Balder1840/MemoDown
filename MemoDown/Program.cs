@@ -1,17 +1,18 @@
 using MemoDown.Components;
 using MemoDown.Options;
 using MemoDown.Services;
+using MemoDown.Services.Background;
 using MemoDown.Store;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Radzen;
-using System.Security.Claims;
-using NotificationService = MemoDown.Services.NotificationService;
-using ContextMenuService = MemoDown.Services.ContextMenuService;
-using DialogService = MemoDown.Services.DialogService;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using Radzen;
+using System.Security.Claims;
+using ContextMenuService = MemoDown.Services.ContextMenuService;
+using DialogService = MemoDown.Services.DialogService;
+using NotificationService = MemoDown.Services.NotificationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,7 @@ builder.Services.AddRadzenComponents();
 
 builder.Services.AddSingleton<MemoStore>();
 builder.Services.AddHostedService<MemoStoreInitializeService>();
+builder.Services.AddHostedService<UploadsCleanupService>();
 builder.Services.AddSingleton<MemoService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();

@@ -507,6 +507,89 @@ namespace MemoDown.Services
             return new FileUploadResult { FileUri = $"/{relativeUrl}/{file.Name}" };
         }
 
+        public void CleanUpUploads()
+        {
+            var rootPath = _options.Value.MemoDir;
+            var uploadsDir = Path.Combine(rootPath, _options.Value.UploadsDir);
+
+            var mdFileWithUploads = new Dictionary<string, (string dir, List<(string VirtualUrl, string PhysicalPath)> Files)>();
+            GetAvaiableMdFileFromUploadsDir(uploadsDir);
+
+            var availableMdFiles = new List<string>();
+            GetAvaiableMdFile(_store.Memo);
+
+            // remove dir exists, but md file not there
+            var noLongerExists = mdFileWithUploads.Select(kv => kv.Key).Except(availableMdFiles).ToList();
+            noLongerExists.ForEach(mdFile =>
+            {
+                if (mdFileWithUploads.TryGetValue(mdFile, out var val))
+                {
+                    if (Directory.Exists(val.dir))
+                    {
+                        Directory.Delete(val.dir, true);
+                    }
+                }
+            });
+
+            // remove md existing, but files changed
+            var exists = mdFileWithUploads.Select(kv => kv.Key).Intersect(availableMdFiles).ToList();
+            exists.ForEach(async mdFile =>
+            {
+                if (mdFileWithUploads.TryGetValue(mdFile, out var val))
+                {
+                    var contents = await File.ReadAllTextAsync(mdFile);
+                    if (!string.IsNullOrWhiteSpace(contents))
+                    {
+                        val.Files.ForEach(file =>
+                        {
+                            if (contents.IndexOf(file.VirtualUrl) < 0)
+                            {
+                                if (File.Exists(file.PhysicalPath))
+                                {
+                                    File.Delete(file.PhysicalPath);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            void GetAvaiableMdFile(MemoItem memo)
+            {
+                if (!memo.IsDirectory)
+                {
+                    availableMdFiles.Add(memo.FullPath);
+                }
+
+                if (memo.IsDirectory)
+                {
+                    memo.Children?.ForEach(child => GetAvaiableMdFile(child));
+                }
+            }
+
+            void GetAvaiableMdFileFromUploadsDir(string path)
+            {
+                if (Directory.Exists(path))
+                {
+                    var files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly)
+                        .Select(x => (VirtualUrl: $"/{GetRelativeUploadsUrl(Path.GetRelativePath(rootPath, x))}", PhysicalPath: x))
+                        .ToList();
+
+                    var mdFilePath = Path.Combine(rootPath, Path.ChangeExtension(Path.GetRelativePath(uploadsDir, path), MemoConstants.FILE_EXTENSION));
+
+                    if (files.Any())
+                    {
+                        mdFileWithUploads.Add(mdFilePath, (dir: path, Files: files));
+                    }
+
+                    foreach (var subDir in Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly))
+                    {
+                        GetAvaiableMdFileFromUploadsDir(subDir);
+                    }
+                }
+            }
+        }
+
         private string GetRelativeUploadsUrl(string url)
         {
             return url.Replace(@"\", "/");
