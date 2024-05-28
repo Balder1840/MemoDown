@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
 
+#pragma warning disable CS8618
 namespace MemoDown.Components.Shared
 {
     public class MemoMenuItemEventArgs : MouseEventArgs

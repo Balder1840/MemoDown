@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using Radzen;
 
+#pragma warning disable CS8618
 namespace MemoDown.Components.Shared
 {
     public partial class MemoPanelMenuItem : RadzenComponent

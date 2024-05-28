@@ -5,6 +5,10 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Radzen;
 
+#pragma warning disable CS8602
+#pragma warning disable CS8618
+#pragma warning disable CS8622
+#pragma warning disable CS8625
 namespace MemoDown.Components.Shared
 {
     public partial  class MemoPanelMenu : RadzenComponentWithChildren
@@ -63,7 +67,7 @@ namespace MemoDown.Components.Shared
             UriHelper.LocationChanged += UriHelper_OnLocationChanged;
         }
 
-        private void UriHelper_OnLocationChanged(object sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+        private void UriHelper_OnLocationChanged(object sender, LocationChangedEventArgs e)
         {
             var allExpandedItems = items.Concat(items.SelectManyRecursive(i => i.ExpandedInternal ? i.items : Enumerable.Empty<MemoPanelMenuItem>()));
             foreach (var item in allExpandedItems)
