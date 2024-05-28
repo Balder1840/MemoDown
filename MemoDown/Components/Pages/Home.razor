@@ -23,6 +23,7 @@
             <RadzenSplitterPane Collapsible="false">
                 <MemoDetail />
                 @* <RadzenButton Text="Dialog with inline Blazor content" ButtonStyle="ButtonStyle.Secondary" Click=@(() => ShowInlineDialog()) /> *@
+                @* <RadzenButton Text="ShowLoading" ButtonStyle="ButtonStyle.Secondary" Click=@(() => ShowLoading()) /> *@
             </RadzenSplitterPane>
         </RadzenSplitter>
     </RadzenSplitterPane>
@@ -66,5 +67,14 @@
             return result as string;
         }
         return null;
+    }
+} *@
+
+@* @code {
+    async Task ShowLoading()
+    {
+        await dialogService.OpenAsync("", ds =>
+        @<RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+   , new DialogOptions() { ShowTitle = false, Style = "min-height:auto;min-width:auto;width:auto;border:none;box-shadow:none;background-color:transparent;", CloseDialogOnEsc = false });
     }
 } *@

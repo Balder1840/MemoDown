@@ -12,12 +12,24 @@ namespace MemoDown.Services
 {
     public class DialogService
     {
-
         private readonly RadzenDialogService _dialogService;
+
+        private readonly RenderFragment<RadzenDialogService> _loadingFragment;
 
         public DialogService(RadzenDialogService dialogService)
         {
             _dialogService = dialogService;
+
+            _loadingFragment = ds => __builder2 =>
+            {
+                __builder2.OpenComponent<RadzenProgressBarCircular>(1029);
+                __builder2.AddComponentParameter(1030, "ProgressBarStyle", RuntimeHelpers.TypeCheck(ProgressBarStyle.Primary));
+                __builder2.AddComponentParameter(1031, "Value", RuntimeHelpers.TypeCheck(100.0));
+                __builder2.AddComponentParameter(1032, "ShowValue", RuntimeHelpers.TypeCheck(value: false));
+                __builder2.AddComponentParameter(1033, "Mode", RuntimeHelpers.TypeCheck(ProgressBarMode.Indeterminate));
+                __builder2.CloseComponent();
+                __builder2.AddMarkupContent(1034, "\r\n");
+            };
         }
 
         public Task<bool?> ConfirmDelete(string? content = null)
@@ -139,6 +151,31 @@ namespace MemoDown.Services
                 return result as string;
             }
             return null;
+        }
+
+        public async Task ShowLoadingAsync()
+        {
+            await _dialogService.OpenAsync("", _loadingFragment, new DialogOptions
+            {
+                ShowTitle = false,
+                Style = "min-height:auto;min-width:auto;width:auto;border:none;box-shadow:none;background-color:transparent;",
+                CloseDialogOnEsc = false
+            });
+        }
+
+        public void ShowLoading()
+        {
+            _dialogService.Open("", _loadingFragment, new DialogOptions
+            {
+                ShowTitle = false,
+                Style = "min-height:auto;min-width:auto;width:auto;border:none;box-shadow:none;background-color:transparent;",
+                CloseDialogOnEsc = false
+            });
+        }
+
+        public void CloseLoading()
+        {
+            _dialogService.Close();
         }
     }
 }
