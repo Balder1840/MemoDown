@@ -4,6 +4,7 @@ using MemoDown.Models;
 using MemoDown.Options;
 using MemoDown.Store;
 using Microsoft.Extensions.Options;
+using NeoSmart.AsyncLock;
 
 namespace MemoDown.Services
 {
@@ -13,6 +14,8 @@ namespace MemoDown.Services
         private readonly IOptions<MemoDownOptions> _options;
         private MemoItem? _selectedMemo;
         private MemoItem? _selectedSidebarMemo;
+
+        private AsyncLock _lock;
 
         public MemoItem RootMemo => _store.Memo;
         public MemoItem? SelectedMemo => _selectedMemo;
@@ -29,6 +32,8 @@ namespace MemoDown.Services
 
             OnSelectedMemoChanged = default!;
             OnSelectedSidebarMemoChanged = default!;
+
+            _lock = new AsyncLock();
 
             InitializeSelectedMemo(RootMemo);
             if (_selectedMemo == null)
@@ -246,6 +251,12 @@ namespace MemoDown.Services
                 if (Directory.Exists(selection.FullPath))
                 {
                     Directory.Delete(selection.FullPath, true);
+                    // remove uploads
+                    var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(selection.FullPath));
+                    if (Directory.Exists(uploadsDir))
+                    {
+                        Directory.Delete(uploadsDir, true);
+                    }
 
                     selection.Parent?.Children?.Remove(selection);
 
@@ -265,6 +276,13 @@ namespace MemoDown.Services
                 if (File.Exists(selection.FullPath))
                 {
                     File.Delete(selection.FullPath);
+                    // remove uploads
+                    var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDirFromFileFullPath(selection.FullPath));
+                    if (Directory.Exists(uploadsDir))
+                    {
+                        Directory.Delete(uploadsDir, true);
+                    }
+
                     selection.Parent?.Children?.Remove(selection);
 
                     SetSelectedMemoFromSidebar();
@@ -278,6 +296,7 @@ namespace MemoDown.Services
             {
                 if (parent.Children != null && parent.Children.Any())
                 {
+                    // 3.1. process children file
                     var subFiles = parent.Children.Where(m => !m.IsDirectory);
                     foreach (var file in subFiles)
                     {
@@ -302,7 +321,7 @@ namespace MemoDown.Services
                         file.FullPath = newFileFullPath;
                     }
 
-                    // 3.2. handle children directory
+                    // 3.2. process children directory
                     var subDirs = parent.Children.Where(m => m.IsDirectory);
                     foreach (var dir in subDirs)
                     {
@@ -315,84 +334,86 @@ namespace MemoDown.Services
                 }
             }
 
-            if (selection.IsDirectory)
+            using (await _lock.LockAsync())
             {
-                if (Directory.Exists(selection.FullPath))
+                if (selection.IsDirectory)
                 {
-                    // 1. move dir
-                    var oldFullPath = selection.FullPath;
-                    // parent path + new
-                    var newFullPath = Path.Combine(Path.GetDirectoryName(oldFullPath)!, newName);
-                    if (Directory.Exists(oldFullPath))
+                    if (Directory.Exists(selection.FullPath))
                     {
-                        Directory.Move(oldFullPath, newFullPath);
+                        // 1. move dir
+                        var oldFullPath = selection.FullPath;
+                        // parent path + new
+                        var newFullPath = Path.Combine(Path.GetDirectoryName(oldFullPath)!, newName);
+                        if (Directory.Exists(oldFullPath))
+                        {
+                            Directory.Move(oldFullPath, newFullPath);
+                        }
+
+                        // 2. move uploads dir
+                        var oldUploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(oldFullPath));
+                        var newUploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(newFullPath));
+                        if (Directory.Exists(oldUploadsDir))
+                        {
+                            Directory.Move(oldUploadsDir, newUploadsDir);
+                        }
+
+                        // 3. children
+                        await HandleChildren(selection, oldFullPath, newFullPath);
+
+                        // 4. update memo in memory
+                        selection.Name = newName;
+                        selection.FullPath = newFullPath;
+
+                        NotifySelectedMemoChanged();
+
+                        NotifySelectedSidebarMemoChanged();
                     }
-
-                    // 2. move uploads dir
-                    var oldUploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(oldFullPath));
-                    var newUploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(newFullPath));
-                    if (Directory.Exists(oldUploadsDir))
-                    {
-                        Directory.Move(oldUploadsDir, newUploadsDir);
-                    }
-
-                    // 3. children
-                    await HandleChildren(selection, oldFullPath, newFullPath);
-
-                    // 4. update memo in memory
-                    selection.Name = newName;
-                    selection.FullPath = newFullPath;
-
-                    
-                    NotifySelectedMemoChanged();
-
-                    NotifySelectedSidebarMemoChanged();
                 }
-            }
-            else
-            {
-                if (File.Exists(selection.FullPath))
+                else
                 {
-                    var oldFileName = $"{oldName}{MemoConstants.FILE_EXTENSION}";
-                    var newFileName = $"{newName}{MemoConstants.FILE_EXTENSION}";
-
-                    // 1. rename memo md file
-                    var oldFullPath = selection.FullPath;
-                    var newFullPath = Path.Combine(Path.GetDirectoryName(oldFullPath)!, newFileName);
-
-                    File.Move(oldFullPath, newFullPath, true);
-
-                    // 2. rename uploads dir
-                    var oldRelativeUploadsDir = GetRelativeUploadsDirFromFileFullPath(oldFullPath);
-                    var oldDir = Path.Combine(_options.Value.MemoDir, oldRelativeUploadsDir);
-
-                    var newRelativeUploadsDir = GetRelativeUploadsDirFromFileFullPath(newFullPath);
-                    var newDir = Path.Combine(_options.Value.MemoDir, newRelativeUploadsDir);
-
-                    if (Directory.Exists(oldDir))
+                    if (File.Exists(selection.FullPath))
                     {
-                        Directory.Move(oldDir, newDir);
+                        var oldFileName = $"{oldName}{MemoConstants.FILE_EXTENSION}";
+                        var newFileName = $"{newName}{MemoConstants.FILE_EXTENSION}";
+
+                        // 1. rename memo md file
+                        var oldFullPath = selection.FullPath;
+                        var newFullPath = Path.Combine(Path.GetDirectoryName(oldFullPath)!, newFileName);
+
+                        File.Move(oldFullPath, newFullPath, true);
+
+                        // 2. rename uploads dir
+                        var oldRelativeUploadsDir = GetRelativeUploadsDirFromFileFullPath(oldFullPath);
+                        var oldDir = Path.Combine(_options.Value.MemoDir, oldRelativeUploadsDir);
+
+                        var newRelativeUploadsDir = GetRelativeUploadsDirFromFileFullPath(newFullPath);
+                        var newDir = Path.Combine(_options.Value.MemoDir, newRelativeUploadsDir);
+
+                        if (Directory.Exists(oldDir))
+                        {
+                            Directory.Move(oldDir, newDir);
+                        }
+
+                        // 3. replace md file contents
+                        var oldRelativeUrl = GetRelativeUploadsUrl(oldRelativeUploadsDir);
+                        var oldUrl = $"/{oldRelativeUrl}/";
+
+                        var newRelativeUrl = GetRelativeUploadsUrl(newRelativeUploadsDir);
+                        var newUrl = $"/{newRelativeUrl}/";
+
+                        var content = await File.ReadAllTextAsync(newFullPath);
+                        if (content.IndexOf(oldUrl) > 0)
+                        {
+                            var newContent = content?.Replace(oldUrl, newUrl);
+                            await File.WriteAllTextAsync(newFullPath, newContent);
+                        }
+
+                        // 4. update memo in memory
+                        selection.Name = newFileName;
+                        selection.FullPath = newFullPath;
+
+                        NotifySelectedMemoChanged();
                     }
-
-                    // 3. replace md file contents
-                    var oldRelativeUrl = GetRelativeUploadsUrl(oldRelativeUploadsDir);
-                    var oldUrl = $"/{oldRelativeUrl}/";
-
-                    var newRelativeUrl = GetRelativeUploadsUrl(newRelativeUploadsDir);
-                    var newUrl = $"/{newRelativeUrl}/";
-
-                    var content = await File.ReadAllTextAsync(newFullPath);
-                    if (content.IndexOf(oldUrl) > 0)
-                    {
-                        var newContent = content?.Replace(oldUrl, newUrl);
-                        await File.WriteAllTextAsync(newFullPath, newContent);
-                    }
-
-                    // 4. update memo in memory
-                    selection.Name = newFileName;
-                    selection.FullPath = newFullPath;
-
-                    NotifySelectedMemoChanged();
                 }
             }
         }
@@ -400,6 +421,7 @@ namespace MemoDown.Services
         #endregion
 
         #region Methods
+
         public string GetMarkdownContents(MemoItem? memo)
         {
             try
@@ -414,13 +436,18 @@ namespace MemoDown.Services
 
         public async Task SaveMarkdownContents(MemoItem? memo, string? content)
         {
-            if (memo != null && !memo.IsDirectory && File.Exists(memo.FullPath))
+            using (await _lock.LockAsync())
             {
-                await using var fs = new StreamWriter(memo.FullPath);
-                await fs.WriteAsync(content);
-                fs.Flush();
-                fs.Close();
-                fs.Dispose();
+                await Task.Delay(1000 * 30);
+
+                if (memo != null && !memo.IsDirectory && File.Exists(memo.FullPath))
+                {
+                    await using var fs = new StreamWriter(memo.FullPath);
+                    await fs.WriteAsync(content);
+                    fs.Flush();
+                    fs.Close();
+                    fs.Dispose();
+                }
             }
         }
 

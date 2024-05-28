@@ -1,4 +1,5 @@
 ﻿using MemoDown.Constants;
+using MemoDown.Extensions;
 using MemoDown.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.CompilerServices;
@@ -123,7 +124,7 @@ namespace MemoDown.Services
                 case MemuEnum.Rename:
                     {
                         var category = selection.IsDirectory ? "文件夹" : "笔记";
-                        var initialName = selection.IsDirectory ? selection.Name : selection.Name.TrimEnd(MemoConstants.FILE_EXTENSION.ToCharArray());
+                        var initialName = selection.IsDirectory ? selection.Name : selection.Name.TrimEnd(MemoConstants.FILE_EXTENSION);
                         var name = await _dialogService.ShowNamingDialog(operation: "重命名", category: category, initialName: initialName);
                         if (!string.IsNullOrWhiteSpace(name))
                         {
