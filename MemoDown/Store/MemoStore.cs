@@ -7,6 +7,8 @@ namespace MemoDown.Store
     public class MemoStore
     {
         private readonly IOptions<MemoDownOptions> _options;
+        private bool _isInitialized = false;
+
         private MemoItem _rootMemo;
         public MemoItem Memo => _rootMemo;
 
@@ -14,10 +16,14 @@ namespace MemoDown.Store
         {
             _options = options;
             _rootMemo = null!;
+
+            EnsureInitialzie();
         }
 
-        public void Initialzie()
+        public void EnsureInitialzie()
         {
+            if (_isInitialized) return;
+
             var memoDir = _options.Value.MemoDir;
             if (!string.IsNullOrWhiteSpace(memoDir) && Directory.Exists(memoDir))
             {
@@ -35,6 +41,7 @@ namespace MemoDown.Store
 
                 _rootMemo.Children = GetChildrenMemosFromDir(memoDir, _rootMemo);
             }
+            _isInitialized = true;
         }
 
         private List<MemoItem> GetChildrenMemosFromDir(string dir, MemoItem? parent)

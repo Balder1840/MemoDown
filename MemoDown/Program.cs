@@ -53,7 +53,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddRadzenComponents();
 
 builder.Services.AddSingleton<MemoStore>();
-builder.Services.AddHostedService<MemoStoreInitializeService>();
+//builder.Services.AddHostedService<MemoStoreInitializeService>();
 builder.Services.AddHostedService<UploadsCleanupService>();
 builder.Services.AddSingleton<MemoService>();
 builder.Services.AddScoped<NotificationService>();
