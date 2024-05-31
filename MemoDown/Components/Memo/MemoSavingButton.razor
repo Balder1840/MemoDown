@@ -1,0 +1,33 @@
+﻿@using Radzen.Blazor
+@inject MemoService _stateContainer
+@implements IDisposable
+<RadzenButton Text="保存"
+              BusyText="保存中"
+              IsBusy="_stateContainer.IsSaving"
+              ButtonStyle="ButtonStyle.Light"
+              Click="SaveMarkdownContent" />
+
+@code {
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _stateContainer.OnSavingChanged += StateHasChanged;
+
+        base.OnInitialized();
+    }
+
+    void SaveMarkdownContent()
+    {
+        if (OnSave.HasDelegate)
+        {
+            OnSave.InvokeAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        _stateContainer.OnSavingChanged -= StateHasChanged;
+    }
+}

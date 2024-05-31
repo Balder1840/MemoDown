@@ -10,10 +10,12 @@ namespace MemoDown.Services
 {
     public class MemoService
     {
+        #region Fields & Properties
         private readonly MemoStore _store;
         private readonly IOptions<MemoDownOptions> _options;
         private MemoItem? _selectedMemo;
         private MemoItem? _selectedSidebarMemo;
+        private bool _isSaving { get; set; }
 
         private AsyncLock _lock;
 
@@ -21,8 +23,24 @@ namespace MemoDown.Services
         public MemoItem? SelectedMemo => _selectedMemo;
         public MemoItem? SelectedSidebarMemo => _selectedSidebarMemo ?? SelectedMemo?.Parent ?? RootMemo;
 
+        public bool IsSaving {
+            get {
+                return _isSaving;
+            }
+            set {
+                if (_isSaving != value)
+                {
+                    _isSaving = value;
+                    NotifySavingChanged();
+                }
+            }
+        }
+
         public event Action OnSelectedMemoChanged;
         public event Action OnSelectedSidebarMemoChanged;
+        public event Action OnSavingChanged;
+
+        #endregion
 
         #region Constructor & Initializer
         public MemoService(MemoStore store, IOptions<MemoDownOptions> options)
@@ -32,6 +50,7 @@ namespace MemoDown.Services
 
             OnSelectedMemoChanged = default!;
             OnSelectedSidebarMemoChanged = default!;
+            OnSavingChanged = default!;
 
             _lock = new AsyncLock();
 
@@ -65,8 +84,9 @@ namespace MemoDown.Services
         #endregion
 
         #region State Container
-        public void NotifySelectedMemoChanged() => OnSelectedMemoChanged?.Invoke();
-        public void NotifySelectedSidebarMemoChanged() => OnSelectedSidebarMemoChanged?.Invoke();
+        private void NotifySelectedMemoChanged() => OnSelectedMemoChanged?.Invoke();
+        private void NotifySelectedSidebarMemoChanged() => OnSelectedSidebarMemoChanged?.Invoke();
+        private void NotifySavingChanged() => OnSavingChanged?.Invoke();
 
         public void SetSelectedMemo(MemoItem? memo)
         {
@@ -440,8 +460,6 @@ namespace MemoDown.Services
         {
             using (await _lock.LockAsync())
             {
-                await Task.Delay(1000 * 30);
-
                 if (memo != null && !memo.IsDirectory && File.Exists(memo.FullPath))
                 {
                     await using var fs = new StreamWriter(memo.FullPath);

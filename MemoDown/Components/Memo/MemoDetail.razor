@@ -1,6 +1,5 @@
 ﻿@using Blazor.Cherrydown.FileUpload
 @inject MemoService _memoService
-@inject MemoService _service
 @inject IOptions<MemoDownOptions> _options
 @implements IDisposable
 
@@ -11,10 +10,9 @@
             <div class="hd w-100">
                 <div class="title">@Memo.Name</div>
                 <div class="toolbar">
-                    @Memo.FullPath
                     @if (!Memo.IsDirectory)
                     {
-                        <RadzenButton Text="保存" IsBusy="_isSaving" BusyText="保存中" ButtonStyle="ButtonStyle.Light" Click="SaveMarkdownContent" />
+                        <MemoSavingButton OnSave="SaveMarkdownContent" />
                         <div class="hd-view-mode">
                             <RadzenProfileMenu Click="HandleSwitchMode">
                                 <Template>
@@ -47,7 +45,9 @@
             else
             {
                 <div class="markdown-container w-100">
-                    <Cherrydown Markdown="@_markdown" OnFileUpload="_memoService.SaveUploadFile" @ref="Editor" />
+                    <Cherrydown @ref="_cherrydownEditor"
+                                OnFileUpload="_memoService.SaveUploadFile"
+                                AfterInit="AfterEditorInit" />
                 </div>
             }
         }
@@ -67,11 +67,10 @@
 
     private string? _markdown;
 
-    private Cherrydown Editor = default!;
+    private Cherrydown _cherrydownEditor = default!;
 
     private Timer? _timer;
-    private bool _isSaving;
-    private TimeSpan _autoSavingDueTime = TimeSpan.FromSeconds(5);
+    private TimeSpan _autoSavingDueTime = TimeSpan.FromSeconds(30);
     private TimeSpan _autoSavingIntervalTime;
 
     protected override void OnInitialized()
@@ -79,38 +78,43 @@
         _autoSavingIntervalTime = TimeSpan.FromSeconds(_options.Value.AutoSavingIntervalSecond);
 
         _memoService.OnSelectedMemoChanged += OnSelectedMemoChanged;
-        _timer = new Timer(async _ =>
+        _timer = new Timer(_ =>
         {
-            await SaveMarkdownContent();
+            InvokeAsync(async () =>
+            {
+                await SaveMarkdownContent();
+            });
 
         }, null, _autoSavingDueTime, _autoSavingIntervalTime);
 
-        _markdown = _service.GetMarkdownContents(Memo);
-
         base.OnInitialized();
+    }
+
+    private void AfterEditorInit()
+    {
+        _markdown = _memoService.GetMarkdownContents(Memo);
+        _cherrydownEditor.SetValueAsync(_markdown);
     }
 
     private async Task SaveMarkdownContent()
     {
         try
         {
-            if (Memo != null && !Memo.IsDirectory && !_isSaving && Editor != null)
+            if (Memo != null && !Memo.IsDirectory && !_memoService.IsSaving && _cherrydownEditor != null)
             {
-                _isSaving = true;
-                await InvokeAsync(StateHasChanged);
+                _memoService.IsSaving = true;
 
                 await Task.Delay(200);
 
-                var markdown = await Editor.GetValueAsync();
+                var markdown = await _cherrydownEditor.GetValueAsync();
                 if (_markdown != markdown)
                 {
-                    await _service.SaveMarkdownContents(Memo, markdown);
+                    await _memoService.SaveMarkdownContents(Memo, markdown);
 
                     _markdown = markdown;
                 }
 
-                _isSaving = false;
-                await InvokeAsync(StateHasChanged);
+                _memoService.IsSaving = false;
             }
         }
         catch { }
@@ -127,18 +131,20 @@
             _timer?.Change(_autoSavingDueTime, _autoSavingIntervalTime);
         }
 
-        _markdown = _service.GetMarkdownContents(Memo);
+        _markdown = _memoService.GetMarkdownContents(Memo);
+        _cherrydownEditor?.SetValueAsync(_markdown);
         StateHasChanged();
     }
 
     private async Task HandleSwitchMode(RadzenProfileMenuItem e)
     {
         var mode = Enum.Parse<CherrydownMode>(e.Value);
-        await Editor.SwitchModeAsync(mode);
+        await _cherrydownEditor.SwitchModeAsync(mode);
     }
 
     public void Dispose()
     {
+        _markdown = null;
         _memoService.OnSelectedMemoChanged -= OnSelectedMemoChanged;
         _timer?.Dispose();
     }
