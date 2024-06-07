@@ -1,5 +1,5 @@
-﻿@implements IDisposable
-@inject NavigationManager NavigationManager
+﻿@* @implements IDisposable *@
+@* @inject NavigationManager NavigationManager *@
 @inherits LayoutComponentBase
 
 <PageTitle>MemoDown</PageTitle>
@@ -22,7 +22,7 @@
 
 <RadzenComponents />
 
-@code {
+@* @code {
     private string? currentUrl;
 
     protected override void OnInitialized()
@@ -41,4 +41,4 @@
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
-}
+} *@

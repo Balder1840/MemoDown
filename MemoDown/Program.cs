@@ -1,4 +1,5 @@
 using MemoDown.Components;
+using MemoDown.Constants;
 using MemoDown.Options;
 using MemoDown.Services;
 using MemoDown.Services.Background;
@@ -22,7 +23,7 @@ builder.Services.AddRazorComponents()
     .AddHubOptions(opt =>
     {
         // https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/signalr?view=aspnetcore-8.0#maximum-receive-message-size
-        opt.MaximumReceiveMessageSize = 1024 * 1024 * 25; // 20m, default is 32k
+        opt.MaximumReceiveMessageSize = MemoConstants.MaxUploadSize; // 25m, default is 32k
     });
 
 builder.Services.AddCascadingAuthenticationState();
@@ -60,7 +61,6 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<DialogService>();
 
-builder.Services.AddOptions<AccountOptions>().BindConfiguration("Account");
 builder.Services.AddOptions<MemoDownOptions>().BindConfiguration("MemoDown");
 
 var app = builder.Build();
@@ -81,7 +81,6 @@ app.UseStaticFiles();
 var memoDownOptions = app.Services.GetRequiredService<IOptions<MemoDownOptions>>().Value;
 if (!string.IsNullOrWhiteSpace(memoDownOptions.UploadsDir))
 {
-
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(Path.Combine(memoDownOptions.MemoDir, memoDownOptions.UploadsDir)),

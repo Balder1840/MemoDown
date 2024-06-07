@@ -151,6 +151,10 @@ namespace MemoDown.Services
             if (!File.Exists(fullName))
             {
                 var fs = File.Create(fullName);
+                fs.Flush();
+                fs.Close();
+                fs.Dispose();
+
                 if (createInParent)
                 {
                     newMemo = new MemoItem
@@ -186,10 +190,6 @@ namespace MemoDown.Services
                     }
                     selection?.Children?.Add(newMemo);
                 }
-
-                fs.Flush();
-                fs.Close();
-                fs.Dispose();
             }
 
             return newMemo;
@@ -312,7 +312,7 @@ namespace MemoDown.Services
 
         public async Task Rename(string oldName, string newName, MemoItem selection)
         {
-            async Task HandleChildren(MemoItem parent, string selectionOldFullPath, string selectionNewFullPath)
+            void HandleChildren(MemoItem parent, string selectionOldFullPath, string selectionNewFullPath)
             {
                 if (parent.Children != null && parent.Children.Any())
                 {
@@ -331,11 +331,11 @@ namespace MemoDown.Services
                         var newRelativeUrl = GetRelativeUploadsUrl(newRelativeUploadsDir);
                         var newUrl = $"/{newRelativeUrl}/";
 
-                        var content = await File.ReadAllTextAsync(newFileFullPath);
+                        var content = File.ReadAllText(newFileFullPath);
                         if (content.IndexOf(oldUrl) > 0)
                         {
                             var newContent = content?.Replace(oldUrl, newUrl);
-                            await File.WriteAllTextAsync(newFileFullPath, newContent);
+                            File.WriteAllText(newFileFullPath, newContent);
                         }
 
                         file.FullPath = newFileFullPath;
@@ -345,7 +345,7 @@ namespace MemoDown.Services
                     var subDirs = parent.Children.Where(m => m.IsDirectory);
                     foreach (var dir in subDirs)
                     {
-                        await HandleChildren(dir, selectionOldFullPath, selectionNewFullPath);
+                        HandleChildren(dir, selectionOldFullPath, selectionNewFullPath);
 
                         var oldSubDirFullPath = dir.FullPath;
                         var newSubDirFullPath = Path.Combine(selectionNewFullPath, Path.GetRelativePath(selectionOldFullPath, dir.FullPath));
@@ -378,7 +378,7 @@ namespace MemoDown.Services
                         }
 
                         // 3. children
-                        await HandleChildren(selection, oldFullPath, newFullPath);
+                        HandleChildren(selection, oldFullPath, newFullPath);
 
                         // 4. update memo in memory
                         selection.Name = newName;
@@ -444,16 +444,14 @@ namespace MemoDown.Services
 
         public string GetMarkdownContents(MemoItem? memo)
         {
-#pragma warning disable CS0168 // Variable is declared but never used
             try
             {
                 return memo == null || memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
             }
-            catch (IOException _)
+            catch (IOException)
             {
                 return string.Empty;
             }
-#pragma warning restore CS0168 // Variable is declared but never used
         }
 
         public async Task SaveMarkdownContents(MemoItem? memo, string? content)
@@ -519,7 +517,7 @@ namespace MemoDown.Services
             }
 
             await using FileStream fs = new(Path.Combine(dir, file.Name), FileMode.Create);
-            await file.OpenReadStream(25 * 1024 * 1024).CopyToAsync(fs); // 25M
+            await file.OpenReadStream(MemoConstants.MaxUploadSize).CopyToAsync(fs); // 25M
 
             var relativeUrl = GetRelativeUploadsUrl(relativeUploadsDir);
             return new FileUploadResult { FileUri = $"/{relativeUrl}/{file.Name}" };

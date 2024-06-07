@@ -38,7 +38,7 @@
     public MemoItem? RootMemo => _memoService.RootMemo;
 
     private MemoItem? SelectedSidebarMemo => _memoService.SelectedSidebarMemo;
-
+    
     protected override void OnInitialized()
     {
         _memoService.OnSelectedSidebarMemoChanged += StateHasChanged;

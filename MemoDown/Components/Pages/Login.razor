@@ -8,7 +8,7 @@
 @using System.ComponentModel.DataAnnotations
 
 @inject NavigationManager NavigationManager
-@inject IOptionsSnapshot<AccountOptions> _options
+@inject IOptionsSnapshot<MemoDownOptions> _options
 
 <PageTitle>Sign In</PageTitle>
 
@@ -62,9 +62,9 @@
         accountValidation?.ClearErrors();
 
         var passwordHasher = new PasswordHasher();
-        if (!string.IsNullOrWhiteSpace(_options.Value.Password) &&
-            UserCredentials.UserName == _options.Value.UserName &&
-            passwordHasher.VerifyHashedPassword(_options.Value.Password!, UserCredentials.Password!) == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Success)
+        if (!string.IsNullOrWhiteSpace(_options.Value.Account.UserName) &&
+            UserCredentials.UserName == _options.Value.Account.UserName &&
+            passwordHasher.VerifyHashedPassword(_options.Value.Account.Password!, UserCredentials.Password!) == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Success)
         {
             var claims = new List<Claim>
             {
