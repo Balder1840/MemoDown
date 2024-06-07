@@ -120,198 +120,189 @@ namespace MemoDown.Services
         #region Memu Handler
         public MemoItem? CreateFile(MemoItem? selection, string? newFileName, bool createInParent = false)
         {
-            lock (_locker)
+            string? dir = null;
+            MemoItem? newMemo = null;
+            newFileName ??= MemoConstants.NEW_FILE;
+
+            if (createInParent)
             {
-                string? dir = null;
-                MemoItem? newMemo = null;
-                newFileName ??= MemoConstants.NEW_FILE;
+                dir = selection?.Parent?.FullPath;
+            }
+            else
+            {
+                dir = selection?.FullPath;
+            }
+
+            dir ??= _options.Value.MemoDir;
+
+            var fileIndex = 0;
+            var fileName = $"{newFileName}{MemoConstants.FILE_EXTENSION}";
+            var fullName = Path.Combine(dir, fileName);
+            while (File.Exists(fullName))
+            {
+                fileIndex++;
+                fileName = $"{newFileName}{fileIndex}{MemoConstants.FILE_EXTENSION}";
+                fullName = Path.Combine(dir, fileName);
+            }
+
+            if (!File.Exists(fullName))
+            {
+                var fs = File.CreateText(fullName);
+                fs.Flush();
+                fs.Close();
+                fs.Dispose();
 
                 if (createInParent)
                 {
-                    dir = selection?.Parent?.FullPath;
+                    newMemo = new MemoItem
+                    {
+                        Name = fileName,
+                        FullPath = fullName,
+                        IsDirectory = false,
+                        Parent = selection?.Parent,
+                        CreatedAt = DateTime.Now,
+                        LastModifiedAt = DateTime.Now,
+                    };
+                    if (selection != null && selection.Parent != null && selection?.Parent?.Children == null)
+                    {
+                        selection!.Parent.Children = new List<MemoItem>();
+                    }
+                    selection?.Parent?.Children?.Add(newMemo);
                 }
                 else
                 {
-                    dir = selection?.FullPath;
-                }
-
-                dir ??= _options.Value.MemoDir;
-
-                var fileIndex = 0;
-                var fileName = $"{newFileName}{MemoConstants.FILE_EXTENSION}";
-                var fullName = Path.Combine(dir, fileName);
-                while (File.Exists(fullName))
-                {
-                    fileIndex++;
-                    fileName = $"{newFileName}{fileIndex}{MemoConstants.FILE_EXTENSION}";
-                    fullName = Path.Combine(dir, fileName);
-                }
-
-                if (!File.Exists(fullName))
-                {
-                    var fs = File.CreateText(fullName);
-                    fs.Flush();
-                    fs.Close();
-                    fs.Dispose();
-
-                    if (createInParent)
+                    newMemo = new MemoItem
                     {
-                        newMemo = new MemoItem
-                        {
-                            Name = fileName,
-                            FullPath = fullName,
-                            IsDirectory = false,
-                            Parent = selection?.Parent,
-                            CreatedAt = DateTime.Now,
-                            LastModifiedAt = DateTime.Now,
-                        };
-                        if (selection != null && selection.Parent != null && selection?.Parent?.Children == null)
-                        {
-                            selection!.Parent.Children = new List<MemoItem>();
-                        }
-                        selection?.Parent?.Children?.Add(newMemo);
-                    }
-                    else
+                        Name = fileName,
+                        FullPath = fullName,
+                        IsDirectory = false,
+                        Parent = selection,
+                        CreatedAt = DateTime.Now,
+                        LastModifiedAt = DateTime.Now,
+                    };
+
+                    if (selection != null && selection?.Children == null)
                     {
-                        newMemo = new MemoItem
-                        {
-                            Name = fileName,
-                            FullPath = fullName,
-                            IsDirectory = false,
-                            Parent = selection,
-                            CreatedAt = DateTime.Now,
-                            LastModifiedAt = DateTime.Now,
-                        };
-
-                        if (selection != null && selection?.Children == null)
-                        {
-                            selection!.Children = new List<MemoItem>();
-                        }
-                        selection?.Children?.Add(newMemo);
+                        selection!.Children = new List<MemoItem>();
                     }
+                    selection?.Children?.Add(newMemo);
                 }
-
-                return newMemo;
             }
+
+            return newMemo;
         }
 
         public MemoItem? CreateDirectory(MemoItem? selection, string? newDirName, bool createInParent = false)
         {
-            lock (_locker)
-            {
-                string? dir = null;
-                MemoItem? newMemo = null;
-                newDirName ??= MemoConstants.NEW_DIRECTORY;
+            string? dir = null;
+            MemoItem? newMemo = null;
+            newDirName ??= MemoConstants.NEW_DIRECTORY;
 
+            if (createInParent)
+            {
+                dir = selection?.Parent?.FullPath;
+            }
+            else
+            {
+                dir = selection?.FullPath;
+            }
+
+            dir ??= _options.Value.MemoDir;
+
+            var dirIndex = 0;
+            var dirName = newDirName;
+            var fullName = Path.Combine(dir, dirName);
+            while (Directory.Exists(fullName))
+            {
+                dirIndex++;
+                dirName = $"{newDirName}{dirIndex}";
+                fullName = Path.Combine(dir, dirName);
+            }
+
+            if (!Directory.Exists(fullName))
+            {
+                Directory.CreateDirectory(fullName);
                 if (createInParent)
                 {
-                    dir = selection?.Parent?.FullPath;
+                    newMemo = new MemoItem
+                    {
+                        Name = dirName,
+                        FullPath = fullName,
+                        IsDirectory = true,
+                        Parent = selection?.Parent,
+                        CreatedAt = DateTime.Now,
+                        LastModifiedAt = DateTime.Now,
+                    };
+                    if (selection != null && selection.Parent != null && selection?.Parent?.Children == null)
+                    {
+                        selection!.Parent.Children = new List<MemoItem>();
+                    }
+                    selection?.Parent?.Children?.Add(newMemo);
                 }
                 else
                 {
-                    dir = selection?.FullPath;
-                }
-
-                dir ??= _options.Value.MemoDir;
-
-                var dirIndex = 0;
-                var dirName = newDirName;
-                var fullName = Path.Combine(dir, dirName);
-                while (Directory.Exists(fullName))
-                {
-                    dirIndex++;
-                    dirName = $"{newDirName}{dirIndex}";
-                    fullName = Path.Combine(dir, dirName);
-                }
-
-                if (!Directory.Exists(fullName))
-                {
-                    Directory.CreateDirectory(fullName);
-                    if (createInParent)
+                    newMemo = new MemoItem
                     {
-                        newMemo = new MemoItem
-                        {
-                            Name = dirName,
-                            FullPath = fullName,
-                            IsDirectory = true,
-                            Parent = selection?.Parent,
-                            CreatedAt = DateTime.Now,
-                            LastModifiedAt = DateTime.Now,
-                        };
-                        if (selection != null && selection.Parent != null && selection?.Parent?.Children == null)
-                        {
-                            selection!.Parent.Children = new List<MemoItem>();
-                        }
-                        selection?.Parent?.Children?.Add(newMemo);
-                    }
-                    else
+                        Name = dirName,
+                        FullPath = fullName,
+                        IsDirectory = true,
+                        Parent = selection,
+                        CreatedAt = DateTime.Now,
+                        LastModifiedAt = DateTime.Now,
+                    };
+                    if (selection != null && selection?.Children == null)
                     {
-                        newMemo = new MemoItem
-                        {
-                            Name = dirName,
-                            FullPath = fullName,
-                            IsDirectory = true,
-                            Parent = selection,
-                            CreatedAt = DateTime.Now,
-                            LastModifiedAt = DateTime.Now,
-                        };
-                        if (selection != null && selection?.Children == null)
-                        {
-                            selection!.Children = new List<MemoItem>();
-                        }
-                        selection?.Children?.Add(newMemo);
+                        selection!.Children = new List<MemoItem>();
                     }
+                    selection?.Children?.Add(newMemo);
                 }
-
-                return newMemo;
             }
+
+            return newMemo;
         }
 
         public void Delete(MemoItem selection)
         {
-            lock (_locker)
+            if (selection.IsDirectory)
             {
-                if (selection.IsDirectory)
+                if (Directory.Exists(selection.FullPath))
                 {
-                    if (Directory.Exists(selection.FullPath))
+                    Directory.Delete(selection.FullPath, true);
+                    // remove uploads
+                    var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(selection.FullPath));
+                    if (Directory.Exists(uploadsDir))
                     {
-                        Directory.Delete(selection.FullPath, true);
-                        // remove uploads
-                        var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(selection.FullPath));
-                        if (Directory.Exists(uploadsDir))
-                        {
-                            Directory.Delete(uploadsDir, true);
-                        }
-
-                        selection.Parent?.Children?.Remove(selection);
-
-                        if (selection.Id == _selectedSidebarMemo?.Id)
-                        {
-                            SetSelectedSidebarMemo(selection.Parent);
-                        }
-                        else
-                        {
-                            NotifySelectedSidebarMemoChanged();
-                        }
-                        SetSelectedMemoFromSidebar();
+                        Directory.Delete(uploadsDir, true);
                     }
+
+                    selection.Parent?.Children?.Remove(selection);
+
+                    if (selection.Id == _selectedSidebarMemo?.Id)
+                    {
+                        SetSelectedSidebarMemo(selection.Parent);
+                    }
+                    else
+                    {
+                        NotifySelectedSidebarMemoChanged();
+                    }
+                    SetSelectedMemoFromSidebar();
                 }
-                else
+            }
+            else
+            {
+                if (File.Exists(selection.FullPath))
                 {
-                    if (File.Exists(selection.FullPath))
+                    File.Delete(selection.FullPath);
+                    // remove uploads
+                    var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDirFromFileFullPath(selection.FullPath));
+                    if (Directory.Exists(uploadsDir))
                     {
-                        File.Delete(selection.FullPath);
-                        // remove uploads
-                        var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDirFromFileFullPath(selection.FullPath));
-                        if (Directory.Exists(uploadsDir))
-                        {
-                            Directory.Delete(uploadsDir, true);
-                        }
-
-                        selection.Parent?.Children?.Remove(selection);
-
-                        SetSelectedMemoFromSidebar();
+                        Directory.Delete(uploadsDir, true);
                     }
+
+                    selection.Parent?.Children?.Remove(selection);
+
+                    SetSelectedMemoFromSidebar();
                 }
             }
         }
@@ -452,10 +443,11 @@ namespace MemoDown.Services
         {
             try
             {
-                lock (_locker)
+                if (memo != null && !memo.IsDirectory && File.Exists(memo.FullPath))
                 {
-                    return memo == null || memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
+                    return File.ReadAllText(memo.FullPath);
                 }
+                return string.Empty;
             }
             catch (IOException)
             {
