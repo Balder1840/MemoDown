@@ -4,7 +4,7 @@ using MemoDown.Models;
 using MemoDown.Options;
 using MemoDown.Store;
 using Microsoft.Extensions.Options;
-using NeoSmart.AsyncLock;
+using System.Text;
 
 namespace MemoDown.Services
 {
@@ -15,9 +15,8 @@ namespace MemoDown.Services
         private readonly IOptions<MemoDownOptions> _options;
         private MemoItem? _selectedMemo;
         private MemoItem? _selectedSidebarMemo;
-        private bool _isSaving { get; set; }
-
-        private AsyncLock _lock;
+        private bool _isSaving;
+        private object _locker = new();
 
         public MemoItem RootMemo => _store.Memo;
         public MemoItem? SelectedMemo => _selectedMemo;
@@ -51,8 +50,6 @@ namespace MemoDown.Services
             OnSelectedMemoChanged = default!;
             OnSelectedSidebarMemoChanged = default!;
             OnSavingChanged = default!;
-
-            _lock = new AsyncLock();
 
             InitializeSelectedMemo(RootMemo);
             if (_selectedMemo == null)
@@ -123,194 +120,203 @@ namespace MemoDown.Services
         #region Memu Handler
         public MemoItem? CreateFile(MemoItem? selection, string? newFileName, bool createInParent = false)
         {
-            string? dir = null;
-            MemoItem? newMemo = null;
-            newFileName ??= MemoConstants.NEW_FILE;
-
-            if (createInParent)
+            lock (_locker)
             {
-                dir = selection?.Parent?.FullPath;
-            }
-            else
-            {
-                dir = selection?.FullPath;
-            }
-
-            dir ??= _options.Value.MemoDir;
-
-            var fileIndex = 0;
-            var fileName = $"{newFileName}{MemoConstants.FILE_EXTENSION}";
-            var fullName = Path.Combine(dir, fileName);
-            while (File.Exists(fullName))
-            {
-                fileIndex++;
-                fileName = $"{newFileName}{fileIndex}{MemoConstants.FILE_EXTENSION}";
-                fullName = Path.Combine(dir, fileName);
-            }
-
-            if (!File.Exists(fullName))
-            {
-                var fs = File.Create(fullName);
-                fs.Flush();
-                fs.Close();
-                fs.Dispose();
+                string? dir = null;
+                MemoItem? newMemo = null;
+                newFileName ??= MemoConstants.NEW_FILE;
 
                 if (createInParent)
                 {
-                    newMemo = new MemoItem
-                    {
-                        Name = fileName,
-                        FullPath = fullName,
-                        IsDirectory = false,
-                        Parent = selection?.Parent,
-                        CreatedAt = DateTime.Now,
-                        LastModifiedAt = DateTime.Now,
-                    };
-                    if (selection != null && selection.Parent != null && selection?.Parent?.Children == null)
-                    {
-                        selection!.Parent.Children = new List<MemoItem>();
-                    }
-                    selection?.Parent?.Children?.Add(newMemo);
+                    dir = selection?.Parent?.FullPath;
                 }
                 else
                 {
-                    newMemo = new MemoItem
-                    {
-                        Name = fileName,
-                        FullPath = fullName,
-                        IsDirectory = false,
-                        Parent = selection,
-                        CreatedAt = DateTime.Now,
-                        LastModifiedAt = DateTime.Now,
-                    };
-
-                    if (selection != null && selection?.Children == null)
-                    {
-                        selection!.Children = new List<MemoItem>();
-                    }
-                    selection?.Children?.Add(newMemo);
+                    dir = selection?.FullPath;
                 }
-            }
 
-            return newMemo;
+                dir ??= _options.Value.MemoDir;
+
+                var fileIndex = 0;
+                var fileName = $"{newFileName}{MemoConstants.FILE_EXTENSION}";
+                var fullName = Path.Combine(dir, fileName);
+                while (File.Exists(fullName))
+                {
+                    fileIndex++;
+                    fileName = $"{newFileName}{fileIndex}{MemoConstants.FILE_EXTENSION}";
+                    fullName = Path.Combine(dir, fileName);
+                }
+
+                if (!File.Exists(fullName))
+                {
+                    var fs = File.CreateText(fullName);
+                    fs.Flush();
+                    fs.Close();
+                    fs.Dispose();
+
+                    if (createInParent)
+                    {
+                        newMemo = new MemoItem
+                        {
+                            Name = fileName,
+                            FullPath = fullName,
+                            IsDirectory = false,
+                            Parent = selection?.Parent,
+                            CreatedAt = DateTime.Now,
+                            LastModifiedAt = DateTime.Now,
+                        };
+                        if (selection != null && selection.Parent != null && selection?.Parent?.Children == null)
+                        {
+                            selection!.Parent.Children = new List<MemoItem>();
+                        }
+                        selection?.Parent?.Children?.Add(newMemo);
+                    }
+                    else
+                    {
+                        newMemo = new MemoItem
+                        {
+                            Name = fileName,
+                            FullPath = fullName,
+                            IsDirectory = false,
+                            Parent = selection,
+                            CreatedAt = DateTime.Now,
+                            LastModifiedAt = DateTime.Now,
+                        };
+
+                        if (selection != null && selection?.Children == null)
+                        {
+                            selection!.Children = new List<MemoItem>();
+                        }
+                        selection?.Children?.Add(newMemo);
+                    }
+                }
+
+                return newMemo;
+            }
         }
 
         public MemoItem? CreateDirectory(MemoItem? selection, string? newDirName, bool createInParent = false)
         {
-            string? dir = null;
-            MemoItem? newMemo = null;
-            newDirName ??= MemoConstants.NEW_DIRECTORY;
-
-            if (createInParent)
+            lock (_locker)
             {
-                dir = selection?.Parent?.FullPath;
-            }
-            else
-            {
-                dir = selection?.FullPath;
-            }
+                string? dir = null;
+                MemoItem? newMemo = null;
+                newDirName ??= MemoConstants.NEW_DIRECTORY;
 
-            dir ??= _options.Value.MemoDir;
-
-            var dirIndex = 0;
-            var dirName = newDirName;
-            var fullName = Path.Combine(dir, dirName);
-            while (Directory.Exists(fullName))
-            {
-                dirIndex++;
-                dirName = $"{newDirName}{dirIndex}";
-                fullName = Path.Combine(dir, dirName);
-            }
-
-            if (!Directory.Exists(fullName))
-            {
-                Directory.CreateDirectory(fullName);
                 if (createInParent)
                 {
-                    newMemo = new MemoItem
-                    {
-                        Name = dirName,
-                        FullPath = fullName,
-                        IsDirectory = true,
-                        Parent = selection?.Parent,
-                        CreatedAt = DateTime.Now,
-                        LastModifiedAt = DateTime.Now,
-                    };
-                    if (selection != null && selection.Parent != null && selection?.Parent?.Children == null)
-                    {
-                        selection!.Parent.Children = new List<MemoItem>();
-                    }
-                    selection?.Parent?.Children?.Add(newMemo);
+                    dir = selection?.Parent?.FullPath;
                 }
                 else
                 {
-                    newMemo = new MemoItem
-                    {
-                        Name = dirName,
-                        FullPath = fullName,
-                        IsDirectory = true,
-                        Parent = selection,
-                        CreatedAt = DateTime.Now,
-                        LastModifiedAt = DateTime.Now,
-                    };
-                    if (selection != null && selection?.Children == null)
-                    {
-                        selection!.Children = new List<MemoItem>();
-                    }
-                    selection?.Children?.Add(newMemo);
+                    dir = selection?.FullPath;
                 }
-            }
 
-            return newMemo;
+                dir ??= _options.Value.MemoDir;
+
+                var dirIndex = 0;
+                var dirName = newDirName;
+                var fullName = Path.Combine(dir, dirName);
+                while (Directory.Exists(fullName))
+                {
+                    dirIndex++;
+                    dirName = $"{newDirName}{dirIndex}";
+                    fullName = Path.Combine(dir, dirName);
+                }
+
+                if (!Directory.Exists(fullName))
+                {
+                    Directory.CreateDirectory(fullName);
+                    if (createInParent)
+                    {
+                        newMemo = new MemoItem
+                        {
+                            Name = dirName,
+                            FullPath = fullName,
+                            IsDirectory = true,
+                            Parent = selection?.Parent,
+                            CreatedAt = DateTime.Now,
+                            LastModifiedAt = DateTime.Now,
+                        };
+                        if (selection != null && selection.Parent != null && selection?.Parent?.Children == null)
+                        {
+                            selection!.Parent.Children = new List<MemoItem>();
+                        }
+                        selection?.Parent?.Children?.Add(newMemo);
+                    }
+                    else
+                    {
+                        newMemo = new MemoItem
+                        {
+                            Name = dirName,
+                            FullPath = fullName,
+                            IsDirectory = true,
+                            Parent = selection,
+                            CreatedAt = DateTime.Now,
+                            LastModifiedAt = DateTime.Now,
+                        };
+                        if (selection != null && selection?.Children == null)
+                        {
+                            selection!.Children = new List<MemoItem>();
+                        }
+                        selection?.Children?.Add(newMemo);
+                    }
+                }
+
+                return newMemo;
+            }
         }
 
         public void Delete(MemoItem selection)
         {
-            if (selection.IsDirectory)
+            lock (_locker)
             {
-                if (Directory.Exists(selection.FullPath))
+                if (selection.IsDirectory)
                 {
-                    Directory.Delete(selection.FullPath, true);
-                    // remove uploads
-                    var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(selection.FullPath));
-                    if (Directory.Exists(uploadsDir))
+                    if (Directory.Exists(selection.FullPath))
                     {
-                        Directory.Delete(uploadsDir, true);
-                    }
+                        Directory.Delete(selection.FullPath, true);
+                        // remove uploads
+                        var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDir(selection.FullPath));
+                        if (Directory.Exists(uploadsDir))
+                        {
+                            Directory.Delete(uploadsDir, true);
+                        }
 
-                    selection.Parent?.Children?.Remove(selection);
+                        selection.Parent?.Children?.Remove(selection);
 
-                    if (selection.Id == _selectedSidebarMemo?.Id)
-                    {
-                        SetSelectedSidebarMemo(selection.Parent);
+                        if (selection.Id == _selectedSidebarMemo?.Id)
+                        {
+                            SetSelectedSidebarMemo(selection.Parent);
+                        }
+                        else
+                        {
+                            NotifySelectedSidebarMemoChanged();
+                        }
+                        SetSelectedMemoFromSidebar();
                     }
-                    else
-                    {
-                        NotifySelectedSidebarMemoChanged();
-                    }
-                    SetSelectedMemoFromSidebar();
                 }
-            }
-            else
-            {
-                if (File.Exists(selection.FullPath))
+                else
                 {
-                    File.Delete(selection.FullPath);
-                    // remove uploads
-                    var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDirFromFileFullPath(selection.FullPath));
-                    if (Directory.Exists(uploadsDir))
+                    if (File.Exists(selection.FullPath))
                     {
-                        Directory.Delete(uploadsDir, true);
+                        File.Delete(selection.FullPath);
+                        // remove uploads
+                        var uploadsDir = Path.Combine(_options.Value.MemoDir, GetRelativeUploadsDirFromFileFullPath(selection.FullPath));
+                        if (Directory.Exists(uploadsDir))
+                        {
+                            Directory.Delete(uploadsDir, true);
+                        }
+
+                        selection.Parent?.Children?.Remove(selection);
+
+                        SetSelectedMemoFromSidebar();
                     }
-
-                    selection.Parent?.Children?.Remove(selection);
-
-                    SetSelectedMemoFromSidebar();
                 }
             }
         }
 
-        public async Task Rename(string oldName, string newName, MemoItem selection)
+        public void Rename(string oldName, string newName, MemoItem selection)
         {
             void HandleChildren(MemoItem parent, string selectionOldFullPath, string selectionNewFullPath)
             {
@@ -354,7 +360,7 @@ namespace MemoDown.Services
                 }
             }
 
-            using (await _lock.LockAsync())
+            lock (_locker)
             {
                 if (selection.IsDirectory)
                 {
@@ -421,11 +427,11 @@ namespace MemoDown.Services
                         var newRelativeUrl = GetRelativeUploadsUrl(newRelativeUploadsDir);
                         var newUrl = $"/{newRelativeUrl}/";
 
-                        var content = await File.ReadAllTextAsync(newFullPath);
+                        var content = File.ReadAllText(newFullPath);
                         if (content.IndexOf(oldUrl) > 0)
                         {
                             var newContent = content?.Replace(oldUrl, newUrl);
-                            await File.WriteAllTextAsync(newFullPath, newContent);
+                            File.WriteAllText(newFullPath, newContent);
                         }
 
                         // 4. update memo in memory
@@ -446,7 +452,10 @@ namespace MemoDown.Services
         {
             try
             {
-                return memo == null || memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
+                lock (_locker)
+                {
+                    return memo == null || memo.IsDirectory ? string.Empty : File.ReadAllText(memo.FullPath);
+                }
             }
             catch (IOException)
             {
@@ -454,17 +463,18 @@ namespace MemoDown.Services
             }
         }
 
-        public async Task SaveMarkdownContents(MemoItem? memo, string? content)
+        public void SaveMarkdownContents(MemoItem? memo, string? content)
         {
-            using (await _lock.LockAsync())
+            lock (_locker)
             {
                 if (memo != null && !memo.IsDirectory && File.Exists(memo.FullPath))
                 {
-                    await using var fs = new StreamWriter(memo.FullPath);
-                    await fs.WriteAsync(content);
-                    fs.Flush();
-                    fs.Close();
-                    fs.Dispose();
+                    File.WriteAllText(memo.FullPath, content, Encoding.UTF8);
+                    //using var fs = new StreamWriter(memo.FullPath);
+                    //fs.Write(content);
+                    //fs.Flush();
+                    //fs.Close();
+                    //fs.Dispose();
                 }
             }
         }
@@ -525,82 +535,85 @@ namespace MemoDown.Services
 
         public void CleanUpUploads()
         {
-            var rootPath = _options.Value.MemoDir;
-            var uploadsDir = Path.Combine(rootPath, _options.Value.UploadsDir);
-
-            var mdFileWithUploads = new Dictionary<string, (string dir, List<(string VirtualUrl, string PhysicalPath)> Files)>();
-            GetAvaiableMdFileFromUploadsDir(uploadsDir);
-
-            var availableMdFiles = new List<string>();
-            GetAvaiableMdFile(_store.Memo);
-
-            // remove dir exists, but md file not there
-            var noLongerExists = mdFileWithUploads.Select(kv => kv.Key).Except(availableMdFiles).ToList();
-            noLongerExists.ForEach(mdFile =>
+            lock (_locker)
             {
-                if (mdFileWithUploads.TryGetValue(mdFile, out var val))
-                {
-                    if (Directory.Exists(val.dir))
-                    {
-                        Directory.Delete(val.dir, true);
-                    }
-                }
-            });
+                var rootPath = _options.Value.MemoDir;
+                var uploadsDir = Path.Combine(rootPath, _options.Value.UploadsDir);
 
-            // remove md existing, but files changed
-            var exists = mdFileWithUploads.Select(kv => kv.Key).Intersect(availableMdFiles).ToList();
-            exists.ForEach(async mdFile =>
-            {
-                if (mdFileWithUploads.TryGetValue(mdFile, out var val))
+                var mdFileWithUploads = new Dictionary<string, (string dir, List<(string VirtualUrl, string PhysicalPath)> Files)>();
+                GetAvaiableMdFileFromUploadsDir(uploadsDir);
+
+                var availableMdFiles = new List<string>();
+                GetAvaiableMdFile(_store.Memo);
+
+                // remove dir exists, but md file not there
+                var noLongerExists = mdFileWithUploads.Select(kv => kv.Key).Except(availableMdFiles).ToList();
+                noLongerExists.ForEach(mdFile =>
                 {
-                    var contents = await File.ReadAllTextAsync(mdFile);
-                    if (!string.IsNullOrWhiteSpace(contents))
+                    if (mdFileWithUploads.TryGetValue(mdFile, out var val))
                     {
-                        val.Files.ForEach(file =>
+                        if (Directory.Exists(val.dir))
                         {
-                            if (contents.IndexOf(file.VirtualUrl) < 0)
+                            Directory.Delete(val.dir, true);
+                        }
+                    }
+                });
+
+                // remove md existing, but files changed
+                var exists = mdFileWithUploads.Select(kv => kv.Key).Intersect(availableMdFiles).ToList();
+                exists.ForEach(mdFile =>
+                {
+                    if (mdFileWithUploads.TryGetValue(mdFile, out var val))
+                    {
+                        var contents = File.ReadAllText(mdFile);
+                        if (!string.IsNullOrWhiteSpace(contents))
+                        {
+                            val.Files.ForEach(file =>
                             {
-                                if (File.Exists(file.PhysicalPath))
+                                if (contents.IndexOf(file.VirtualUrl) < 0)
                                 {
-                                    File.Delete(file.PhysicalPath);
+                                    if (File.Exists(file.PhysicalPath))
+                                    {
+                                        File.Delete(file.PhysicalPath);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
-                }
-            });
+                });
 
-            void GetAvaiableMdFile(MemoItem memo)
-            {
-                if (!memo.IsDirectory)
+                void GetAvaiableMdFile(MemoItem memo)
                 {
-                    availableMdFiles.Add(memo.FullPath);
-                }
-
-                if (memo.IsDirectory)
-                {
-                    memo.Children?.ForEach(child => GetAvaiableMdFile(child));
-                }
-            }
-
-            void GetAvaiableMdFileFromUploadsDir(string path)
-            {
-                if (Directory.Exists(path))
-                {
-                    var files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly)
-                        .Select(x => (VirtualUrl: $"/{GetRelativeUploadsUrl(Path.GetRelativePath(rootPath, x))}", PhysicalPath: x))
-                        .ToList();
-
-                    var mdFilePath = Path.Combine(rootPath, Path.ChangeExtension(Path.GetRelativePath(uploadsDir, path), MemoConstants.FILE_EXTENSION));
-
-                    if (files.Any())
+                    if (!memo.IsDirectory)
                     {
-                        mdFileWithUploads.Add(mdFilePath, (dir: path, Files: files));
+                        availableMdFiles.Add(memo.FullPath);
                     }
 
-                    foreach (var subDir in Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly))
+                    if (memo.IsDirectory)
                     {
-                        GetAvaiableMdFileFromUploadsDir(subDir);
+                        memo.Children?.ForEach(child => GetAvaiableMdFile(child));
+                    }
+                }
+
+                void GetAvaiableMdFileFromUploadsDir(string path)
+                {
+                    if (Directory.Exists(path))
+                    {
+                        var files = Directory.GetFiles(path, "*", SearchOption.TopDirectoryOnly)
+                            .Select(x => (VirtualUrl: $"/{GetRelativeUploadsUrl(Path.GetRelativePath(rootPath, x))}", PhysicalPath: x))
+                            .ToList();
+
+                        var mdFilePath = Path.Combine(rootPath, Path.ChangeExtension(Path.GetRelativePath(uploadsDir, path), MemoConstants.FILE_EXTENSION));
+
+                        if (files.Any())
+                        {
+                            mdFileWithUploads.Add(mdFilePath, (dir: path, Files: files));
+                        }
+
+                        foreach (var subDir in Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly))
+                        {
+                            GetAvaiableMdFileFromUploadsDir(subDir);
+                        }
                     }
                 }
             }

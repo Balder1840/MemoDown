@@ -109,7 +109,7 @@
                 var markdown = await _cherrydownEditor.GetValueAsync();
                 if (_markdown != markdown)
                 {
-                    await _memoService.SaveMarkdownContents(Memo, markdown);
+                    _memoService.SaveMarkdownContents(Memo, markdown);
 
                     _markdown = markdown;
                 }

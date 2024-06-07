@@ -128,7 +128,7 @@ namespace MemoDown.Services
                         var name = await _dialogService.ShowNamingDialog(operation: "重命名", category: category, initialName: initialName);
                         if (!string.IsNullOrWhiteSpace(name))
                         {
-                            await _memoService.Rename(initialName, name, selection);
+                            _memoService.Rename(initialName, name, selection);
                             _notificationService.Notify(NotificationSeverity.Success, "重命名成功！");
                         }
                         break;
