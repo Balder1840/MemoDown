@@ -31,13 +31,13 @@ docker buildx inspect --bootstrap container
 
 - Build docker image (optional)
   - Push to docker hub
-```bash
-docker buildx build --platform=linux/amd64,linux/arm64 --push --builder=container -t balder1840/memo-down:v1.0.1 .
-```
+    ```bash
+    docker buildx build --platform=linux/amd64,linux/arm64 --push --builder=container -t balder1840/memo-down:v1.0.1 .
+    ```
   - Or load to local
-```bash
-docker buildx build --platform=linux/amd64 --load --builder=container -t balder1840/memo-down:v1.0.1 .
-```
+    ```bash
+    docker buildx build --platform=linux/amd64 --load --builder=container -t balder1840/memo-down:v1.0.1 .
+    ```
 
 - Use the image
 ```bash
