@@ -70,20 +70,26 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    //app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
 // used for uploading, define a new request path
 var memoDownOptions = app.Services.GetRequiredService<IOptions<MemoDownOptions>>().Value;
-if (!string.IsNullOrWhiteSpace(memoDownOptions.UploadsDir))
+if (!string.IsNullOrWhiteSpace(memoDownOptions.UploadsRelativePath))
 {
+    var uploadsDir = Path.Combine(memoDownOptions.MemoDir, memoDownOptions.UploadsRelativePath);
+    if (!Directory.Exists(uploadsDir))
+    {
+        Directory.CreateDirectory(uploadsDir);
+    }
+
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = new PhysicalFileProvider(Path.Combine(memoDownOptions.MemoDir, memoDownOptions.UploadsDir)),
+        FileProvider = new PhysicalFileProvider(uploadsDir),
         RequestPath = $"/{memoDownOptions.UploadsVirtualPath}"
     });
 }

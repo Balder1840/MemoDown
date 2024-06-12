@@ -8,7 +8,7 @@
         public string MemoDir { get; set; } =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Memo);
         public int AutoSavingIntervalSecond { get; set; } = 30;
-        public string UploadsDir { get; set; } = DefaultUploadsDir;
+        public string UploadsRelativePath { get; set; } = DefaultUploadsDir;
         public string UploadsVirtualPath { get; set; } = DefaultUploadsDir;
 
         public Account Account { get; set; } = new Account();

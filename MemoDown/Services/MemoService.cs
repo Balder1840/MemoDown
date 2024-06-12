@@ -4,7 +4,6 @@ using MemoDown.Models;
 using MemoDown.Options;
 using MemoDown.Store;
 using Microsoft.Extensions.Options;
-using System.Text;
 
 namespace MemoDown.Services
 {
@@ -461,7 +460,7 @@ namespace MemoDown.Services
             {
                 if (memo != null && !memo.IsDirectory && File.Exists(memo.FullPath))
                 {
-                    File.WriteAllText(memo.FullPath, content, Encoding.UTF8);
+                    File.WriteAllText(memo.FullPath, content);
                     //using var fs = new StreamWriter(memo.FullPath);
                     //fs.Write(content);
                     //fs.Flush();
@@ -530,7 +529,7 @@ namespace MemoDown.Services
             lock (_locker)
             {
                 var rootPath = _options.Value.MemoDir;
-                var uploadsDir = Path.Combine(rootPath, _options.Value.UploadsDir);
+                var uploadsDir = Path.Combine(rootPath, _options.Value.UploadsRelativePath);
 
                 var mdFileWithUploads = new Dictionary<string, (string dir, List<(string VirtualUrl, string PhysicalPath)> Files)>();
                 GetAvaiableMdFileFromUploadsDir(uploadsDir);
@@ -618,12 +617,12 @@ namespace MemoDown.Services
 
         private string GetRelativeUploadsDir(string absolutePath)
         {
-            return Path.Combine(_options.Value.UploadsDir, Path.GetRelativePath(_options.Value.MemoDir, absolutePath));
+            return Path.Combine(_options.Value.UploadsRelativePath, Path.GetRelativePath(_options.Value.MemoDir, absolutePath));
         }
 
         private string GetRelativeUploadsDirFromFileFullPath(string fullPath)
         {
-            return Path.Combine(_options.Value.UploadsDir,
+            return Path.Combine(_options.Value.UploadsRelativePath,
                 Path.GetRelativePath(_options.Value.MemoDir, Path.GetDirectoryName(fullPath)!),
                 Path.GetFileNameWithoutExtension(fullPath));
         }
