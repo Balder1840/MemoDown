@@ -8,8 +8,10 @@
         public const string DELETE = "删除";
         public const string RENAME = "重命名";
 
+        public const string SINGOUT = "退出登陆";
+
         public const string MY_DIRECTORY = "我的文件夹";
 
-        public const int MaxUploadSize = 25 * 1024 * 1024; 
+        public const int MaxUploadSize = 25 * 1024 * 1024;
     }
 }

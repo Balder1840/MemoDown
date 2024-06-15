@@ -5,9 +5,10 @@
 <sidebar>
     <RadzenStack AlignItems="AlignItems.Center" Gap="0" class="rz-mx-auto h-100">
         <div class="avatar rz-mt-8">
-            <RadzenImage Path="/images/avatar.jpg" />
+            <RadzenImage Path="/images/avatar.jpg" Click="OpenProfileContextMenu" />
         </div>
-        <RadzenButton Text="新建" Icon="add" Shade="Shade.Light" class="btn-add" Click="@(args=> _contextMenuService.HandleSidebarBtnAddClick(args))" />
+        <RadzenButton Text="新建" Icon="add" Shade="Shade.Light" class="btn-add"
+                      Click="@(args=> _contextMenuService.OnSidebarBtnAddClick(args))" />
 
         <MemoPanelMenu Multiple="true" class="rz-scrollbars w-100">
             <MemoPanelMenuItem @key="RootMemo?.Id"
@@ -24,7 +25,7 @@
                     <MemoItems Memos="RootMemo?.Children"
                                CurrentMemo="SelectedSidebarMemo"
                                OnMenuItemClick=@OnMemoItemClick
-                               OnMemoContextMenu="OnOpenContextMenu"
+                               OnMemoContextMenu="OpenMemoContextMenu"
                                DirectoryOnly="true" />
                 </ChildContent>
             </MemoPanelMenuItem>
@@ -38,7 +39,7 @@
     public MemoItem? RootMemo => _memoService.RootMemo;
 
     private MemoItem? SelectedSidebarMemo => _memoService.SelectedSidebarMemo;
-    
+
     protected override void OnInitialized()
     {
         _memoService.OnSelectedSidebarMemoChanged += StateHasChanged;
@@ -51,10 +52,36 @@
         _memoService.SetSelectedMemoFromSidebar();
     }
 
-    void OnOpenContextMenu(MemoContextMenuArgs args)
+    void OpenMemoContextMenu(MemoContextMenuArgs args)
     {
-        _contextMenuService.HandleOpenContextMenu(args);
+        _contextMenuService.OpenMemoContextMenu(args);
     }
+
+    void OpenProfileContextMenu(MouseEventArgs args)
+    {
+        _contextMenuService.OpenProfileContextMenu(args);
+        //     cc.Open(args, ds =>
+        // @<RadzenMenu Click="OnProfileContextMenuItemClick">
+        //     <RadzenMenuItem Value="MemuEnum.Signout">
+        //         <Template>
+        //             <form method="post" action="/logout">
+        //                 <RadzenButton Icon="logout" Text="MemoConstants.DELETE"
+        //                               ButtonStyle="ButtonStyle.Light"
+        //                               ButtonType="ButtonType.Submit"
+        //                               class="profile-menu-item-button" />
+        //             </form>
+        //         </Template>
+        //     </RadzenMenuItem>
+        // </RadzenMenu>);
+    }
+
+    // void OnProfileContextMenuItemClick(MenuItemEventArgs args)
+    // {
+    //     if (!args.Value.Equals(3) && !args.Value.Equals(4))
+    //     {
+    //         cc.Close();
+    //     }
+    // }
 
     public void Dispose()
     {

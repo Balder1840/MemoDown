@@ -13,11 +13,15 @@ namespace MemoDown.Services
 {
     public class ContextMenuService
     {
+        #region Properties & Fields
         private readonly NotificationService _notificationService;
         private readonly RadzenContextMenuService _contextMenuService;
         private readonly MemoService _memoService;
         private readonly DialogService _dialogService;
+        private readonly RenderFragment<RadzenContextMenuService> _profileContextMenuFragment;
+        #endregion
 
+        #region Constructor
         public ContextMenuService(NotificationService notificationService,
             RadzenContextMenuService contextMenuService,
             MemoService memoService,
@@ -27,25 +31,55 @@ namespace MemoDown.Services
             _contextMenuService = contextMenuService;
             _memoService = memoService;
             _dialogService = dialogService;
-        }
 
-        public void HandleSidebarBtnAddClick(MouseEventArgs args)
+            _profileContextMenuFragment = value => __builder2 =>
+            {
+                __builder2.OpenComponent<RadzenMenu>(644);
+                __builder2.AddComponentParameter(645, "Click", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create((object)this, (Action<MenuItemEventArgs>)OnProfileContextMenuItemClick)));
+                __builder2.AddAttribute(646, "ChildContent", (RenderFragment)delegate (RenderTreeBuilder __builder3)
+                {
+                    __builder3.OpenComponent<RadzenMenuItem>(647);
+                    __builder3.AddComponentParameter(648, "Value", RuntimeHelpers.TypeCheck((object)MemuEnum.Signout));
+                    __builder3.AddAttribute(649, "Template", (RenderFragment)delegate (RenderTreeBuilder __builder4)
+                    {
+                        __builder4.OpenElement(650, "form");
+                        __builder4.AddAttribute(651, "method", "post");
+                        __builder4.AddAttribute(652, "action", "/logout");
+                        __builder4.AddAttribute(653, "b-wfm830zd58");
+                        __builder4.OpenComponent<RadzenButton>(654);
+                        __builder4.AddComponentParameter(655, "Icon", "logout");
+                        __builder4.AddComponentParameter(656, "Text", RuntimeHelpers.TypeCheck(MemoConstants.SINGOUT));
+                        __builder4.AddComponentParameter(657, "ButtonStyle", RuntimeHelpers.TypeCheck(ButtonStyle.Light));
+                        __builder4.AddComponentParameter(658, "ButtonType", RuntimeHelpers.TypeCheck(ButtonType.Submit));
+                        __builder4.AddComponentParameter(659, "class", "profile-menu-item-button");
+                        __builder4.CloseComponent();
+                        __builder4.CloseElement();
+                    });
+                    __builder3.CloseComponent();
+                });
+                __builder2.CloseComponent();
+            };
+        }
+        #endregion
+
+        #region Public Methods
+        public void OnSidebarBtnAddClick(MouseEventArgs args)
         {
             _contextMenuService.Open(args,
             new List<ContextMenuItem> {
                 new ContextMenuItem(){ Text = MemoConstants.NEW_FILE, Value = MemuEnum.CreateNote, Image="/images/markdown_20x20.png", ImageStyle="margin-right:0.5rem;" },
                 new ContextMenuItem(){ Text = MemoConstants.NEW_DIRECTORY, Value = MemuEnum.CreateDiretory, Icon = "folder" } },
-            async menuArgs => await OnMenuItemClick(menuArgs, _memoService.SelectedSidebarMemo));
+            async menuArgs => await OnSidebarAddBtnContextMenuItemClick(menuArgs, _memoService.SelectedSidebarMemo));
         }
 
-        public void HandleOpenContextMenu(MemoContextMenuArgs args)
+        public void OpenMemoContextMenu(MemoContextMenuArgs args)
         {
             RenderFragment<RadzenContextMenuService> rf = value => __builder2 =>
             {
                 __builder2.OpenComponent<RadzenMenu>(545);
                 __builder2.AddComponentParameter(546, "Click", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create((object)this, async delegate (MenuItemEventArgs arg)
                 {
-                    await OnContextMenuClick(arg, args.Memo);
+                    await OnMemoContextMenuItemClick(arg, args.Memo);
                 })));
                 __builder2.AddAttribute(547, "ChildContent", (RenderFragment)delegate (RenderTreeBuilder __builder3)
                 {
@@ -80,7 +114,14 @@ namespace MemoDown.Services
             _contextMenuService.Open(args.MouseArgs, rf);
         }
 
-        private async Task OnContextMenuClick(MenuItemEventArgs args, MemoItem selection)
+        public void OpenProfileContextMenu(MouseEventArgs args)
+        {
+            _contextMenuService.Open(args, _profileContextMenuFragment);
+        }
+        #endregion
+
+        #region Private Methods
+        private async Task OnMemoContextMenuItemClick(MenuItemEventArgs args, MemoItem selection)
         {
             var menu = (MemuEnum)args.Value;
 
@@ -141,7 +182,13 @@ namespace MemoDown.Services
             _contextMenuService.Close();
         }
 
-        private async Task OnMenuItemClick(MenuItemEventArgs args, MemoItem? selection)
+        private void OnProfileContextMenuItemClick(MenuItemEventArgs args)
+        {
+            //var menu = (MemuEnum)args.Value;
+            _contextMenuService.Close();
+        }
+
+        private async Task OnSidebarAddBtnContextMenuItemClick(MenuItemEventArgs args, MemoItem? selection)
         {
             var menu = (MemuEnum)args.Value;
 
@@ -179,5 +226,6 @@ namespace MemoDown.Services
 
             _contextMenuService.Close();
         }
+        #endregion
     }
 }

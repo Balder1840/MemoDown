@@ -105,7 +105,7 @@ app.MapRazorComponents<App>()
 app.MapPost("logout", async (
                 ClaimsPrincipal user,
                 HttpContext context,
-                [FromForm] string returnUrl
+                [FromForm] string? returnUrl
                 ) =>
 {
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

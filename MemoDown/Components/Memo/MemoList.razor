@@ -32,7 +32,7 @@
                 <MemoItems Memos="memos"
                            CurrentMemo="Selection"
                            OnMenuItemClick=@OnMemoItemClick
-                           OnMemoContextMenu="OnOpenContextMenu"
+                           OnMemoContextMenu="OpenMemoContextMenu"
                            RenderChildren="false" />
             </MemoPanelMenu>
         }
@@ -108,9 +108,9 @@
         _memoService.SetSelectedMemo(args.Value as MemoItem);
     }
 
-    void OnOpenContextMenu(MemoContextMenuArgs args)
+    void OpenMemoContextMenu(MemoContextMenuArgs args)
     {
-        _contextMenuService.HandleOpenContextMenu(args);
+        _contextMenuService.OpenMemoContextMenu(args);
     }
 
     async Task OnBtnAddClick(MouseEventArgs args)

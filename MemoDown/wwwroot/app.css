@@ -96,3 +96,19 @@
 .rz-panel-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-menu .rz-navigation-item .rz-navigation-item-link {
     padding-left: var(--rz-panel-menu-item-5th-level-offset);
 }
+
+
+.rz-button.profile-menu-item-button {
+    background-color: transparent;
+    padding: 0;
+    min-height: 0;
+}
+
+.rz-button.profile-menu-item-button .rz-button-box {
+    gap: 0;
+}
+
+.rz-button.profile-menu-item-button .rz-button-box .rz-button-text {
+    font-size: 16px;
+    font-weight: 400;
+}
