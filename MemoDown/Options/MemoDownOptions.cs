@@ -12,11 +12,20 @@
         public string UploadsVirtualPath { get; set; } = DefaultUploadsDir;
 
         public Account Account { get; set; } = new Account();
+
+        public CloudflareTurnstile CloudflareTurnstile { get; set; } = new CloudflareTurnstile();
     }
 
     public class Account
     {
         public string? UserName { get; set; }
         public string? Password { get; set; }
+    }
+
+    public class CloudflareTurnstile
+    {
+        public bool Enable { get; set; }
+        public string? SiteKey { get; set; }
+        public string? SecretKey { get; set; }
     }
 }

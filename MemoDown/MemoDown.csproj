@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Blazor.Cherrydown" Version="0.1.17" />
+    <PackageReference Include="BlazorTurnstile" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
     <PackageReference Include="Radzen.Blazor" Version="4.30.3" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
   </ItemGroup>

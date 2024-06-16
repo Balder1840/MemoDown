@@ -51,6 +51,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 //    string baseAddress = addressFeature != null ? addressFeature.Addresses.First() : string.Empty;
 //    return new HttpClient { BaseAddress = new Uri(baseAddress) };
 //});
+
+builder.Services.AddHttpClient();
+
 builder.Services.AddRadzenComponents();
 
 builder.Services.AddSingleton<MemoStore>();
@@ -60,6 +63,7 @@ builder.Services.AddSingleton<MemoService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<DialogService>();
+builder.Services.AddSingleton<CloudflareTurnstileService>();
 
 builder.Services.AddOptions<MemoDownOptions>().BindConfiguration("MemoDown");
 

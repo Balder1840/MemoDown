@@ -1,4 +1,5 @@
 ﻿@page "/login"
+@using BlazorTurnstile
 @using MemoDown.Helpers
 @using MemoDown.Options
 @using MemoDown.Validators
@@ -6,15 +7,20 @@
 @using Microsoft.Extensions.Options
 @using System.Security.Claims
 @using System.ComponentModel.DataAnnotations
+@using System.Runtime.Serialization
 
 @inject NavigationManager NavigationManager
 @inject IOptionsSnapshot<MemoDownOptions> _options
+@inject CloudflareTurnstileService _cloudflareTurnstileService
+
+@* @rendermode InteractiveServer *@
 
 <PageTitle>Sign In</PageTitle>
 
 <RadzenCard class="rz-my-12 rz-mx-auto rz-p-4 rz-p-md-12" style="max-width: 600px;">
-    <EditForm method="post" OnValidSubmit="LoginUser" Model="UserCredentials" FormName="LoginUser">
-        <DataAnnotationsValidator />
+    <EditForm method="post" OnValidSubmit="LoginUser" Model="FormModel" FormName="LoginUser">
+        @* <DataAnnotationsValidator /> *@
+        <ObjectGraphDataAnnotationsValidator />
         <AccountValidation @ref="accountValidation" />
         <ValidationSummary />
 
@@ -34,6 +40,19 @@
                         @* <ValidationMessage For="@(()=> UserCredentials.Password)" /> *@
                     </div>
                 </div>
+                @if (_options.Value.CloudflareTurnstile.Enable)
+                {
+                    <div class="rz-form-row">
+                        <label class="rz-label"></label>
+                        <div class="rz-form-input-wrapper">
+                            <Turnstile @rendermode="RenderMode.InteractiveServer"
+                                       SiteKey="@_options.Value.CloudflareTurnstile.SiteKey"
+                                       Appearance="@TurnstileAppearance.Always"
+                                       Execution="@TurnstileExecution.Render"
+                                       Theme="@TurnstileTheme.Light" />
+                        </div>
+                    </div>
+                }
                 <div class="rz-form-row">
                     <label class="rz-label"></label>
                     <div class="rz-form-input-wrapper rz-login-buttons">
@@ -49,6 +68,9 @@
     [CascadingParameter]
     public HttpContext HttpContext { get; set; } = default!;
 
+    [SupplyParameterFromForm(Name = "")]
+    public LoginFormModel FormModel { get; set; } = new LoginFormModel();
+
     [SupplyParameterFromForm]
     public Credentials UserCredentials { get; set; } = new Credentials();
 
@@ -60,6 +82,22 @@
     public async Task LoginUser()
     {
         accountValidation?.ClearErrors();
+
+        if (_options.Value.CloudflareTurnstile.Enable)
+        {// read users ip address
+         // proxy? => https://learn.microsoft.com/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-8.0&WT.mc_id=DT-MVP-5001507
+            var userIP = HttpContext.Connection.RemoteIpAddress;
+
+            var turnstileResult = await _cloudflareTurnstileService.Verify(FormModel.TurnstileToken!, userIpAddress: userIP);
+
+            if (!turnstileResult.Success)
+            {
+                var errors = new Dictionary<string, List<string>>();
+                errors.Add("Account", turnstileResult.ErrorCodes.Select(m => $"Cloudflare Turnstile: {m}").ToList());
+                accountValidation?.DisplayErrors(errors);
+                return;
+            }
+        }
 
         var passwordHasher = new PasswordHasher();
         if (!string.IsNullOrWhiteSpace(_options.Value.Account.UserName) &&
@@ -88,6 +126,15 @@
             errors.Add("Account", new() { "UserName or Password is not correct." });
             accountValidation?.DisplayErrors(errors);
         }
+    }
+
+    public class LoginFormModel
+    {
+        [ValidateComplexType]
+        public Credentials UserCredentials { get; set; } = new Credentials();
+
+        [DataMember(Name = "cf-turnstile-response")]
+        public string? TurnstileToken { get; set; }
     }
 
     public class Credentials

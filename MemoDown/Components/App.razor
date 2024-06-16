@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject IOptionsSnapshot<MemoDownOptions> _options
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -19,8 +20,12 @@
 <body>
     <Routes @rendermode="RenderModeForPage" />
     <script src="_framework/blazor.web.js"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
-
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>    
+    @if (_options.Value.CloudflareTurnstile.Enable)
+    {
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>    
+    }
+        
     <div id="svg-sprite" style="visibility: hidden; width: 0; height: 0; display: flex; font-size: 0; vertical-align: top">
         <svg xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink">
             <defs>
