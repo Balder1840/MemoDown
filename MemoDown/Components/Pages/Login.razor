@@ -16,9 +16,10 @@
 @* @rendermode InteractiveServer *@
 
 <PageTitle>Sign In</PageTitle>
+<PageScript Src="./Components/Pages/Login.razor.js?login" />
 
 <RadzenCard class="rz-my-12 rz-mx-auto rz-p-4 rz-p-md-12" style="max-width: 600px;">
-    <EditForm method="post" OnValidSubmit="LoginUser" Model="FormModel" FormName="LoginUser">
+    <EditForm method="post" OnValidSubmit="LoginUser" Model="FormModel" FormName="LoginUser" Enhance="true">
         @* <DataAnnotationsValidator /> *@
         <ObjectGraphDataAnnotationsValidator />
         <AccountValidation @ref="accountValidation" />
@@ -42,7 +43,7 @@
                 </div>
                 @if (_options.Value.CloudflareTurnstile.Enable)
                 {
-                    <div class="rz-form-row">
+                    <div class="rz-form-row" data-permanent>
                         <label class="rz-label"></label>
                         <div class="rz-form-input-wrapper">
                             <Turnstile @rendermode="RenderMode.InteractiveServer"
@@ -84,8 +85,9 @@
         accountValidation?.ClearErrors();
 
         if (_options.Value.CloudflareTurnstile.Enable)
-        {// read users ip address
-         // proxy? => https://learn.microsoft.com/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-8.0&WT.mc_id=DT-MVP-5001507
+        {
+            // read users ip address
+            // proxy? => https://learn.microsoft.com/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-8.0&WT.mc_id=DT-MVP-5001507
             var userIP = HttpContext.Connection.RemoteIpAddress;
 
             var turnstileResult = await _cloudflareTurnstileService.Verify(FormModel.TurnstileToken!, userIpAddress: userIP);
@@ -93,7 +95,7 @@
             if (!turnstileResult.Success)
             {
                 var errors = new Dictionary<string, List<string>>();
-                errors.Add("Account", turnstileResult.ErrorCodes.Select(m => $"Cloudflare Turnstile: {m}").ToList());
+                errors.Add("CloudflareTurnstile", turnstileResult.ErrorCodes.Select(m => $"Cloudflare Turnstile: {m}").ToList());
                 accountValidation?.DisplayErrors(errors);
                 return;
             }
@@ -118,7 +120,17 @@
 
             await HttpContext.SignInAsync(principal, authProperties);
 
-            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+            // only works when form with "Enhance" or Enhance=true
+            // refers https://github.com/dotnet/aspnetcore/issues/53996#issuecomment-1976934727
+            HttpContext.Response.Headers.Append("blazor-enhanced-nav-redirect-location", ReturnUrl ?? "/");
+            HttpContext.Response.StatusCode = 200;
+
+            // only works when form without "Enhance" or Enhance=false
+            // but should use NavigationManager for blazor
+            // HttpContext.Response.Redirect("/", true);
+
+            // only works when form without "Enhance" or Enhance=false
+            // NavigationManager.NavigateTo(ReturnUrl ?? "/", true);
         }
         else
         {

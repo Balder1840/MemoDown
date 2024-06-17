@@ -65,7 +65,11 @@ builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddSingleton<CloudflareTurnstileService>();
 
-builder.Services.AddOptions<MemoDownOptions>().BindConfiguration("MemoDown");
+builder.Services.AddOptions<MemoDownOptions>()
+    .BindConfiguration(MemoDownOptions.Key)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<MemoDownOptions>, MemoDownOptionsValidation>();
 
 var app = builder.Build();
 

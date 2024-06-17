@@ -1,13 +1,19 @@
-﻿namespace MemoDown.Options
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MemoDown.Options
 {
     public class MemoDownOptions
     {
         private const string Memo = "memo";
         private const string DefaultUploadsDir = "uploads";
 
-        public string MemoDir { get; set; } =
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Memo);
+        public const string Key = "MemoDown";
+
+        public string MemoDir { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Memo);
+
+        [Required(ErrorMessage = "AutoSavingIntervalSecond is required.")]
         public int AutoSavingIntervalSecond { get; set; } = 30;
+
         public string UploadsRelativePath { get; set; } = DefaultUploadsDir;
         public string UploadsVirtualPath { get; set; } = DefaultUploadsDir;
 
