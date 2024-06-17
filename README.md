@@ -22,6 +22,27 @@ dotnet build -c Release -r win-x64 --self-contained true
 dotnet build -c Release -r linux-x64 --self-contained true
 ```
 
+## Configurations
+```json
+  "MemoDown": {
+  "MemoDir": "/path/to/markdown", // default to C:\Users\[UserName]\memo on Windows or /home/memo on Linux
+  "AutoSavingIntervalSecond": 30,
+  "UploadsDir": "/path/to/uploads", // default to [MemoDir]/uploads
+  "UploadsVirtualPath": "request virtual path for uploads", // default to uploads
+  "Account": {
+    "UserName": "balder1840",
+    "Password": "AQAAAAIAAYagAAAAEJXIr6HwTn5e4MD0a+kdmBi2J166MTfufoCThELvnOfDp0VrPrCbt9PBRW1if5YxlA=="
+  },  
+  "CloudflareTurnstile": {
+    "Enable": false,
+    "SiteKey": "your turnstile SiteKey",
+    "SecretKey": "your turnstile SecretKey"
+  }
+}
+```
+
+> you may need the [password-hasher](https://github.com/Balder1840/password-hasher) to hash your password
+
 ## Using docker
 - Create builder for cross-platform docker building (optional)
 ```bash
@@ -40,7 +61,7 @@ docker buildx inspect --bootstrap container
     ```
 
 - Use the image
-```bash
+```docker
   docker run -d \
   --name memodown \
   -p 8080:8080 \
@@ -49,19 +70,3 @@ docker buildx inspect --bootstrap container
   -v ~/memo:/memo \
   balder1840/memo-down:tagname \
 ```
-
-## Configuration
-```json
-"MemoDown": {
-  "Account": {
-    "UserName": "balder1840",
-    "Password": "AQAAAAIAAYagAAAAEJXIr6HwTn5e4MD0a+kdmBi2J166MTfufoCThELvnOfDp0VrPrCbt9PBRW1if5YxlA=="
-  },
-  "MemoDir": "/path/to/markdown", // default to C:\Users\[UserName]\memo on Windows or /home/memo on Linux
-  "AutoSavingIntervalSecond": 30,
-  "UploadsDir": "/path/to/uploads", // default to [MemoDir]/uploads
-  "UploadsVirtualPath": "request virtual path for uploads" // default to uploads
-}
-```
-
-> you may need the [password-hasher](https://github.com/Balder1840/password-hasher) to hash your password
