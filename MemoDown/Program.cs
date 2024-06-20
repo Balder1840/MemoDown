@@ -64,6 +64,7 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddSingleton<CloudflareTurnstileService>();
+builder.Services.AddSingleton<GithubSyncService>();
 
 builder.Services.AddOptions<MemoDownOptions>()
     .BindConfiguration(MemoDownOptions.Key)
@@ -101,6 +102,9 @@ if (!string.IsNullOrWhiteSpace(memoDownOptions.UploadsRelativePath))
         RequestPath = $"/{memoDownOptions.UploadsVirtualPath}"
     });
 }
+
+var git = app.Services.GetRequiredService<GithubSyncService>();
+await git.SyncToGithub($"synchronized at {DateTime.Now:HH:mm:ss, dddd, MMMM d, yyyy}");
 
 app.UseAuthentication();
 app.UseAuthorization();

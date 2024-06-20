@@ -10,7 +10,8 @@ namespace MemoDown.Models
         DeleteDiretory,
         Delete,
         Rename,
-        Signout
+        Signout,
+        Sync
     }
 
     public class MemoContextMenuArgs

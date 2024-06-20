@@ -49,6 +49,26 @@ namespace MemoDown.Options
                 }
             }
 
+            if (options.Github.Enable)
+            {
+                if (string.IsNullOrWhiteSpace(options.Github.PAT))
+                {
+                    errors.Add($"{nameof(Github.PAT)} is required.");
+                }
+                if (string.IsNullOrWhiteSpace(options.Github.RepoName))
+                {
+                    errors.Add($"{nameof(Github.RepoName)} is required.");
+                }
+                if (string.IsNullOrWhiteSpace(options.Github.RepoOwner))
+                {
+                    errors.Add($"{nameof(Github.RepoOwner)} is required.");
+                }
+                if (string.IsNullOrWhiteSpace(options.Github.Branch))
+                {
+                    errors.Add($"{nameof(Github.Branch)} is required.");
+                }
+            }
+
             if (errors.Any())
             {
                 return ValidateOptionsResult.Fail(errors);

@@ -20,6 +20,8 @@ namespace MemoDown.Options
         public Account Account { get; set; } = new Account();
 
         public CloudflareTurnstile CloudflareTurnstile { get; set; } = new CloudflareTurnstile();
+
+        public Github Github { get; set; } = new Github();
     }
 
     public class Account
@@ -33,5 +35,17 @@ namespace MemoDown.Options
         public bool Enable { get; set; }
         public string? SiteKey { get; set; }
         public string? SecretKey { get; set; }
+    }
+
+    public class Github
+    {
+        private const string DefaultBranch = "main";
+        public bool Enable { get; set; }
+        public string? RepoName { get; set; }
+        public string? RepoOwner { get; set; }
+        public string? Branch { get; set; } = DefaultBranch;
+        public string? PAT { get; set; }
+
+        public string HeadRef => $"heads/{Branch}";
     }
 }
