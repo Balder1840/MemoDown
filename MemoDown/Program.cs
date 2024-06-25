@@ -1,3 +1,4 @@
+using Coravel;
 using MemoDown.Components;
 using MemoDown.Constants;
 using MemoDown.Options;
@@ -7,6 +8,7 @@ using MemoDown.Store;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Radzen;
@@ -65,12 +67,15 @@ builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddSingleton<CloudflareTurnstileService>();
 builder.Services.AddSingleton<GithubSyncService>();
+builder.Services.TryAddSingleton<GithubAutoSyncService>();
 
 builder.Services.AddOptions<MemoDownOptions>()
     .BindConfiguration(MemoDownOptions.Key)
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<MemoDownOptions>, MemoDownOptionsValidation>();
+
+builder.Services.AddScheduler();
 
 var app = builder.Build();
 
@@ -103,8 +108,17 @@ if (!string.IsNullOrWhiteSpace(memoDownOptions.UploadsRelativePath))
     });
 }
 
-var git = app.Services.GetRequiredService<GithubSyncService>();
-await git.SyncToGithub($"synchronized at {DateTime.Now:HH:mm:ss, dddd, MMMM d, yyyy}");
+if (memoDownOptions.Github.Enable && memoDownOptions.Github.EnableAutoSync)
+{
+    app.Services.UseScheduler(scheduler =>
+    {
+        scheduler
+        .Schedule<GithubAutoSyncService>()
+        .Cron(memoDownOptions.Github.AutoSyncAtCron)
+        .Zoned(TimeZoneInfo.Local)
+        .PreventOverlapping(nameof(GithubAutoSyncService));
+    });
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

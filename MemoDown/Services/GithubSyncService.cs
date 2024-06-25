@@ -3,8 +3,10 @@ using MemoDown.Extensions;
 using MemoDown.Options;
 using Microsoft.Extensions.Options;
 using Octokit;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace MemoDown.Services
 {
@@ -16,6 +18,8 @@ namespace MemoDown.Services
         private string _headRef;
         private readonly GitHubClient _githubClient;
         private readonly IOptions<MemoDownOptions> _options;
+        private readonly PartitionedRateLimiter<string> _rateLimiter;
+        private const string RateLimiterPartitionKey = "MEMODOWN";
 
         public GithubSyncService(IOptions<MemoDownOptions> options)
         {
@@ -30,6 +34,37 @@ namespace MemoDown.Services
             _githubClient = new GitHubClient(new ProductHeaderValue(MemoDownOptions.Key));
             _githubClient.Credentials = credential;
 
+            // github allows 900r/min, 5000r/hour
+            _rateLimiter = PartitionedRateLimiter.CreateChained(
+                    // 5000r/1hour
+                    PartitionedRateLimiter.Create<string, string>(_ => RateLimitPartition.GetFixedWindowLimiter(RateLimiterPartitionKey, _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5000,
+                        QueueLimit = 5000,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        AutoReplenishment = true,
+                        Window = TimeSpan.FromHours(1),
+                    })),
+                    // 4r/1s
+                    PartitionedRateLimiter.Create<string, string>(_ => RateLimitPartition.GetTokenBucketLimiter(RateLimiterPartitionKey, _ => new TokenBucketRateLimiterOptions
+                    {
+                        TokenLimit = 1,
+                        QueueLimit = 5000,
+                        TokensPerPeriod = 1,
+                        ReplenishmentPeriod = TimeSpan.FromMilliseconds(250),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        AutoReplenishment = true,
+                    }))
+                //PartitionedRateLimiter.Create<string, string>(_ => RateLimitPartition.GetSlidingWindowLimiter(RateLimiterPartitionKey, _ => new SlidingWindowRateLimiterOptions
+                //{
+                //    PermitLimit = 4,
+                //    QueueLimit = 5000,
+                //    SegmentsPerWindow = 4,
+                //    Window = TimeSpan.FromSeconds(1),
+                //    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                //    AutoReplenishment = true,
+                //}))
+                );
         }
 
         public async Task SyncToGithub(string commitMessage)
@@ -118,7 +153,10 @@ namespace MemoDown.Services
                 {
                     if (change.Extension == MemoConstants.FILE_EXTENSION)
                     {
+                        //Stopwatch sw = Stopwatch.StartNew();
+                        //sw.Start();
                         var blob = await CreateBlob(File.ReadAllText(change.FullPath));
+                        //sw.Stop();
                         var tree = new NewTreeItem
                         {
                             Path = change.RelateivePath,
@@ -165,7 +203,6 @@ namespace MemoDown.Services
         }
 
         private const string DefaultMode = "100644";
-        private const int ApiCallLimit = 5000;
         private async Task<IEnumerable<BlobObject>> GetRemoteFiles()
         {
             var trees = await GetRemoteTrees();
@@ -181,33 +218,40 @@ namespace MemoDown.Services
 
         private async Task<IReadOnlyList<TreeItem>> GetRemoteTrees()
         {
+            using var _ = await _rateLimiter.AcquireAsync(RateLimiterPartitionKey, 1);
             var tree = await _githubClient!.Git.Tree.GetRecursive(_repoOwner, _repoName, _branch);
             return tree.Tree;
         }
 
-        private Task<Reference> GetHeadRef()
+        private async Task<Reference> GetHeadRef()
         {
-            return _githubClient!.Git.Reference.Get(_repoOwner, _repoName, _headRef);
+            using var _ = await _rateLimiter.AcquireAsync(RateLimiterPartitionKey, 1);
+            return await _githubClient!.Git.Reference.Get(_repoOwner, _repoName, _headRef);
         }
 
-        private Task<Commit> GetCommit(string sha)
+        private async Task<Commit> GetCommit(string sha)
         {
-            return _githubClient!.Git.Commit.Get(_repoOwner, _repoName, sha);
+            using var _ = await _rateLimiter.AcquireAsync(RateLimiterPartitionKey, 1);
+            return await _githubClient!.Git.Commit.Get(_repoOwner, _repoName, sha);
         }
 
-        private Task<BlobReference> CreateBlob(string content)
+        private async Task<BlobReference> CreateBlob(string content)
         {
+            using var _ = await _rateLimiter.AcquireAsync(RateLimiterPartitionKey, 1);
             var blob = new NewBlob { Encoding = EncodingType.Utf8, Content = content };
-            return _githubClient!.Git.Blob.Create(_repoOwner, _repoName, blob);
+            return await _githubClient!.Git.Blob.Create(_repoOwner, _repoName, blob);
         }
-        private Task<BlobReference> CreateBlob(byte[] array)
+        private async Task<BlobReference> CreateBlob(byte[] array)
         {
+            using var _ = await _rateLimiter.AcquireAsync(RateLimiterPartitionKey, 1);
             var blob = new NewBlob { Encoding = EncodingType.Base64, Content = Convert.ToBase64String(array) };
-            return _githubClient!.Git.Blob.Create(_repoOwner, _repoName, blob);
+            return await _githubClient!.Git.Blob.Create(_repoOwner, _repoName, blob);
         }
 
-        private Task<TreeResponse> CreateTree(GitReference baseTree, IEnumerable<NewTreeItem> treeItems)
+        private async Task<TreeResponse> CreateTree(GitReference baseTree, IEnumerable<NewTreeItem> treeItems)
         {
+            using var _ = await _rateLimiter.AcquireAsync(RateLimiterPartitionKey, 1);
+
             var newTree = new NewTree { BaseTree = baseTree.Sha };
 
             foreach (var item in treeItems)
@@ -215,19 +259,21 @@ namespace MemoDown.Services
                 newTree.Tree.Add(item);
             }
 
-            return _githubClient!.Git.Tree.Create(_repoOwner, _repoName, newTree);
+            return await _githubClient!.Git.Tree.Create(_repoOwner, _repoName, newTree);
         }
 
-        private Task<Commit> CreateCommit(string commitMessage, string treeSha, string parentSha)
+        private async Task<Commit> CreateCommit(string commitMessage, string treeSha, string parentSha)
         {
+            using var _ = await _rateLimiter.AcquireAsync(RateLimiterPartitionKey, 1);
             var newCommit = new NewCommit(commitMessage, treeSha, parentSha);
-            return _githubClient!.Git.Commit.Create(_repoOwner, _repoName, newCommit);
+            return await _githubClient!.Git.Commit.Create(_repoOwner, _repoName, newCommit);
         }
 
         // Update HEAD with the commit
-        private Task<Reference> UpdateHeadRef(string commitSha)
+        private async Task<Reference> UpdateHeadRef(string commitSha)
         {
-            return _githubClient!.Git.Reference.Update(_repoOwner, _repoName, _headRef, new ReferenceUpdate(commitSha));
+            using var _ = await _rateLimiter.AcquireAsync(RateLimiterPartitionKey, 1);
+            return await _githubClient!.Git.Reference.Update(_repoOwner, _repoName, _headRef, new ReferenceUpdate(commitSha));
         }
 
         #endregion

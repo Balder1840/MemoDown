@@ -9,6 +9,7 @@
         public const string RENAME = "重命名";
 
         public const string SINGOUT = "退出登陆";
+        public const string SYNC_TO_GITHUB= "同步到Github";
 
         public const string MY_DIRECTORY = "我的文件夹";
 

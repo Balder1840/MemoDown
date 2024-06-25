@@ -2,6 +2,8 @@
 @inject MemoService _memoService
 @implements IDisposable
 
+@* @inject Radzen.ContextMenuService cc *@
+
 <sidebar>
     <RadzenStack AlignItems="AlignItems.Center" Gap="0" class="rz-mx-auto h-100">
         <div class="avatar rz-mt-8">
@@ -60,27 +62,26 @@
     void OpenProfileContextMenu(MouseEventArgs args)
     {
         _contextMenuService.OpenProfileContextMenu(args);
-        //     cc.Open(args, ds =>
-        // @<RadzenMenu Click="OnProfileContextMenuItemClick">
-        //     <RadzenMenuItem Value="MemuEnum.Signout">
-        //         <Template>
-        //             <form method="post" action="/logout">
-        //                 <RadzenButton Icon="logout" Text="MemoConstants.DELETE"
-        //                               ButtonStyle="ButtonStyle.Light"
-        //                               ButtonType="ButtonType.Submit"
-        //                               class="profile-menu-item-button" />
-        //             </form>
-        //         </Template>
-        //     </RadzenMenuItem>
-        // </RadzenMenu>);
+
+    //     cc.Open(args, ds =>
+    // @<RadzenMenu Click="OnProfileContextMenuItemClick">
+    //     <RadzenMenuItem Value="@MemuEnum.Signout">
+    //         <Template>
+    //             <form method="post" action="/logout">
+    //                 <RadzenButton Icon="logout" Text="@MemoConstants.SINGOUT"
+    //                               ButtonStyle="ButtonStyle.Light"
+    //                               ButtonType="ButtonType.Submit"
+    //                               class="profile-menu-item-button" />
+    //             </form>
+    //         </Template>
+    //     </RadzenMenuItem>
+    //     <RadzenMenuItem Text="@MemoConstants.SYNC_TO_GITHUB" Image="images/github-mark.svg" Value="@MemuEnum.Sync" ImageStyle="width:20px;height:20px;margin-right:0.5rem;" />
+    // </RadzenMenu>);
     }
 
-    // void OnProfileContextMenuItemClick(MenuItemEventArgs args)
+    // async Task OnProfileContextMenuItemClick(MenuItemEventArgs args)
     // {
-    //     if (!args.Value.Equals(3) && !args.Value.Equals(4))
-    //     {
-    //         cc.Close();
-    //     }
+    //     await Task.Delay(1);
     // }
 
     public void Dispose()

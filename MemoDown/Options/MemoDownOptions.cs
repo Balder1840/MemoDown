@@ -46,6 +46,9 @@ namespace MemoDown.Options
         public string? Branch { get; set; } = DefaultBranch;
         public string? PAT { get; set; }
 
+        public bool EnableAutoSync { get; set; }
+        public string? AutoSyncAtCron { get; set; } = "00 02 * * *";
+
         public string HeadRef => $"heads/{Branch}";
     }
 }

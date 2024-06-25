@@ -18,6 +18,7 @@ namespace MemoDown.Services
         private readonly RadzenContextMenuService _contextMenuService;
         private readonly MemoService _memoService;
         private readonly DialogService _dialogService;
+        private readonly GithubSyncService _githubSyncService;
         private readonly RenderFragment<RadzenContextMenuService> _profileContextMenuFragment;
         #endregion
 
@@ -25,17 +26,19 @@ namespace MemoDown.Services
         public ContextMenuService(NotificationService notificationService,
             RadzenContextMenuService contextMenuService,
             MemoService memoService,
-            DialogService dialogService)
+            DialogService dialogService,
+            GithubSyncService githubSyncService)
         {
             _notificationService = notificationService;
             _contextMenuService = contextMenuService;
             _memoService = memoService;
             _dialogService = dialogService;
+            _githubSyncService = githubSyncService;
 
             _profileContextMenuFragment = value => __builder2 =>
             {
                 __builder2.OpenComponent<RadzenMenu>(644);
-                __builder2.AddComponentParameter(645, "Click", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create((object)this, (Action<MenuItemEventArgs>)OnProfileContextMenuItemClick)));
+                __builder2.AddComponentParameter(645, "Click", RuntimeHelpers.TypeCheck(EventCallback.Factory.Create((object)this, (Func<MenuItemEventArgs, Task>)OnProfileContextMenuItemClick)));
                 __builder2.AddAttribute(646, "ChildContent", (RenderFragment)delegate (RenderTreeBuilder __builder3)
                 {
                     __builder3.OpenComponent<RadzenMenuItem>(647);
@@ -55,6 +58,13 @@ namespace MemoDown.Services
                         __builder4.CloseComponent();
                         __builder4.CloseElement();
                     });
+                    __builder3.CloseComponent();
+                    __builder3.AddMarkupContent(660, "\r\n        ");
+                    __builder3.OpenComponent<RadzenMenuItem>(661);
+                    __builder3.AddComponentParameter(662, "Text", RuntimeHelpers.TypeCheck(MemoConstants.SYNC_TO_GITHUB));
+                    __builder3.AddComponentParameter(663, "Image", "images/github-mark.svg");
+                    __builder3.AddComponentParameter(664, "Value", RuntimeHelpers.TypeCheck(MemuEnum.Sync));
+                    __builder3.AddComponentParameter(665, "ImageStyle", "width:20px;height:20px;margin-right:0.5rem;");
                     __builder3.CloseComponent();
                 });
                 __builder2.CloseComponent();
@@ -123,6 +133,8 @@ namespace MemoDown.Services
         #region Private Methods
         private async Task OnMemoContextMenuItemClick(MenuItemEventArgs args, MemoItem selection)
         {
+            _contextMenuService.Close();
+
             var menu = (MemuEnum)args.Value;
 
             switch (menu)
@@ -178,18 +190,34 @@ namespace MemoDown.Services
                     _notificationService.Notify(NotificationSeverity.Error, "未知菜单类型！");
                     break;
             }
-
-            _contextMenuService.Close();
         }
 
-        private void OnProfileContextMenuItemClick(MenuItemEventArgs args)
+        private async Task OnProfileContextMenuItemClick(MenuItemEventArgs args)
         {
-            //var menu = (MemuEnum)args.Value;
             _contextMenuService.Close();
+
+            var menu = (MemuEnum)args.Value;
+            switch (menu)
+            {
+                case MemuEnum.Sync:
+                    {
+                        _dialogService.ShowLoading();
+                        await _githubSyncService.SyncToGithub($"synchronized at {DateTime.Now:HH:mm:ss, dddd, MMMM d, yyyy}");
+
+                        _dialogService.CloseLoading();
+                        _notificationService.Notify(NotificationSeverity.Success, "同步至Github成功！");
+                        break;
+                    }
+                default:
+                    _notificationService.Notify(NotificationSeverity.Error, "未知菜单类型！");
+                    break;
+            }
         }
 
         private async Task OnSidebarAddBtnContextMenuItemClick(MenuItemEventArgs args, MemoItem? selection)
         {
+            _contextMenuService.Close();
+
             var menu = (MemuEnum)args.Value;
 
             switch (menu)
@@ -223,8 +251,6 @@ namespace MemoDown.Services
                     _notificationService.Notify(NotificationSeverity.Error, "未知菜单类型！");
                     break;
             }
-
-            _contextMenuService.Close();
         }
         #endregion
     }
