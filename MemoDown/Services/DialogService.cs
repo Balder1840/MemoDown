@@ -22,13 +22,18 @@ namespace MemoDown.Services
 
             _loadingFragment = ds => __builder2 =>
             {
-                __builder2.OpenComponent<RadzenProgressBarCircular>(1029);
-                __builder2.AddComponentParameter(1030, "ProgressBarStyle", RuntimeHelpers.TypeCheck(ProgressBarStyle.Primary));
-                __builder2.AddComponentParameter(1031, "Value", RuntimeHelpers.TypeCheck(100.0));
-                __builder2.AddComponentParameter(1032, "ShowValue", RuntimeHelpers.TypeCheck(value: false));
-                __builder2.AddComponentParameter(1033, "Mode", RuntimeHelpers.TypeCheck(ProgressBarMode.Indeterminate));
-                __builder2.CloseComponent();
-                __builder2.AddMarkupContent(1034, "\r\n");
+                //__builder2.OpenComponent<RadzenProgressBarCircular>(1029);
+                //__builder2.AddComponentParameter(1030, "ProgressBarStyle", RuntimeHelpers.TypeCheck(ProgressBarStyle.Primary));
+                //__builder2.AddComponentParameter(1031, "Value", RuntimeHelpers.TypeCheck(100.0));
+                //__builder2.AddComponentParameter(1032, "ShowValue", RuntimeHelpers.TypeCheck(value: false));
+                //__builder2.AddComponentParameter(1033, "Mode", RuntimeHelpers.TypeCheck(ProgressBarMode.Indeterminate));
+                //__builder2.CloseComponent();
+                //__builder2.AddMarkupContent(1034, "\r\n");
+
+                __builder2.OpenElement(2031, "div");
+                __builder2.AddAttribute(2032, "class", RuntimeHelpers.TypeCheck("memo-spinner"));
+                __builder2.CloseElement();
+
             };
         }
 
@@ -158,7 +163,7 @@ namespace MemoDown.Services
             await _dialogService.OpenAsync("", _loadingFragment, new DialogOptions
             {
                 ShowTitle = false,
-                Style = "min-height:auto;min-width:auto;width:auto;border:none;box-shadow:none;background-color:transparent;",
+                Style = "width:100%;height:100%;",
                 CloseDialogOnEsc = false
             });
         }
@@ -168,7 +173,8 @@ namespace MemoDown.Services
             _dialogService.Open("", _loadingFragment, new DialogOptions
             {
                 ShowTitle = false,
-                Style = "min-height:auto;min-width:auto;width:auto;border:none;box-shadow:none;background-color:transparent;",
+                CssClass = "memo-spinner-wrapper",
+                Style = "width:100%;height:100%;",
                 CloseDialogOnEsc = false
             });
         }
