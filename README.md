@@ -9,7 +9,7 @@ A simple knowledge management web application supports markdown, powered by blaz
 - [x] Saving all resources to local file system
 - [x] Multiple level hierarchy sidebar 
 - [x] Automatically saving
-- [ ] Sync to Github
+- [x] Sync to Github
 
 # Usage
 ## Build from source
@@ -30,13 +30,22 @@ dotnet build -c Release -r linux-x64 --self-contained true
   "UploadsDir": "/path/to/uploads", // default to [MemoDir]/uploads
   "UploadsVirtualPath": "request virtual path for uploads", // default to uploads
   "Account": {
-    "UserName": "balder1840",
-    "Password": "AQAAAAIAAYagAAAAEJXIr6HwTn5e4MD0a+kdmBi2J166MTfufoCThELvnOfDp0VrPrCbt9PBRW1if5YxlA=="
+    "UserName": "your user name",
+    "Password": "your password hash"
   },  
   "CloudflareTurnstile": {
     "Enable": false,
     "SiteKey": "your turnstile SiteKey",
     "SecretKey": "your turnstile SecretKey"
+  },
+  "Github": {
+    "Enable": false,
+    "PAT": "your Personal Access Token",
+    "RepoName": "your repo to sync to",
+    "RepoOwner": "owner name of the repo",
+    "Branch": "branch name", // default to main
+    "EnableAutoSync": false,
+    "AutoSyncAtCron": "0 2 * * *" // linux cron expression
   }
 }
 ```
