@@ -8,7 +8,6 @@ using MemoDown.Store;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Radzen;
@@ -60,14 +59,15 @@ builder.Services.AddRadzenComponents();
 
 builder.Services.AddSingleton<MemoStore>();
 //builder.Services.AddHostedService<MemoStoreInitializeService>();
-builder.Services.AddHostedService<UploadsCleanupService>();
+//builder.Services.AddHostedService<UploadsCleanupService>();
 builder.Services.AddSingleton<MemoService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddSingleton<CloudflareTurnstileService>();
 builder.Services.AddSingleton<GithubSyncService>();
-builder.Services.TryAddSingleton<GithubAutoSyncService>();
+builder.Services.AddSingleton<GithubAutoSyncService>();
+builder.Services.AddSingleton<UploadsCleanupService>();
 
 builder.Services.AddOptions<MemoDownOptions>()
     .BindConfiguration(MemoDownOptions.Key)
@@ -108,17 +108,23 @@ if (!string.IsNullOrWhiteSpace(memoDownOptions.UploadsRelativePath))
     });
 }
 
-if (memoDownOptions.Github.Enable && memoDownOptions.Github.EnableAutoSync)
+app.Services.UseScheduler(scheduler =>
 {
-    app.Services.UseScheduler(scheduler =>
+    scheduler
+    .Schedule<UploadsCleanupService>()
+    .Cron(memoDownOptions.CleanUploadsAt)
+    .Zoned(TimeZoneInfo.Local)
+    .PreventOverlapping(nameof(UploadsCleanupService));
+
+    if (memoDownOptions.Github.Enable && memoDownOptions.Github.EnableAutoSync)
     {
         scheduler
         .Schedule<GithubAutoSyncService>()
-        .Cron(memoDownOptions.Github.AutoSyncAtCron)
+        .Cron(memoDownOptions.Github.AutoSyncAt)
         .Zoned(TimeZoneInfo.Local)
         .PreventOverlapping(nameof(GithubAutoSyncService));
-    });
-}
+    }
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

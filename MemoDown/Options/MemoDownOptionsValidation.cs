@@ -68,9 +68,9 @@ namespace MemoDown.Options
                     errors.Add($"{nameof(Github.Branch)} is required.");
                 }
 
-                if (options.Github.EnableAutoSync && string.IsNullOrWhiteSpace(options.Github.AutoSyncAtCron))
+                if (options.Github.EnableAutoSync && string.IsNullOrWhiteSpace(options.Github.AutoSyncAt))
                 {
-                    errors.Add($"{nameof(Github.AutoSyncAtCron)} is required.");
+                    errors.Add($"{nameof(Github.AutoSyncAt)} is required.");
                 }
             }
 

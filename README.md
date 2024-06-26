@@ -29,6 +29,7 @@ dotnet build -c Release -r linux-x64 --self-contained true
   "AutoSavingIntervalSecond": 30,
   "UploadsDir": "/path/to/uploads", // default to [MemoDir]/uploads
   "UploadsVirtualPath": "request virtual path for uploads", // default to uploads
+  "CleanUploadsAt": "0 1 * * *", linux cron expression, better before AutoSyncAt
   "Account": {
     "UserName": "your user name",
     "Password": "your password hash"
@@ -45,7 +46,7 @@ dotnet build -c Release -r linux-x64 --self-contained true
     "RepoOwner": "owner name of the repo",
     "Branch": "branch name", // default to main
     "EnableAutoSync": false,
-    "AutoSyncAtCron": "0 2 * * *" // linux cron expression
+    "AutoSyncAt": "0 2 * * *" // linux cron expression
   }
 }
 ```

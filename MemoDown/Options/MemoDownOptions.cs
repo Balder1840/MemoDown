@@ -17,6 +17,9 @@ namespace MemoDown.Options
         public string UploadsRelativePath { get; set; } = DefaultUploadsDir;
         public string UploadsVirtualPath { get; set; } = DefaultUploadsDir;
 
+        [Required(ErrorMessage = "CleanUploadsAt is required.")]
+        public string CleanUploadsAt { get; set; } = "00 01 * * *";
+
         public Account Account { get; set; } = new Account();
 
         public CloudflareTurnstile CloudflareTurnstile { get; set; } = new CloudflareTurnstile();
@@ -47,7 +50,7 @@ namespace MemoDown.Options
         public string? PAT { get; set; }
 
         public bool EnableAutoSync { get; set; }
-        public string? AutoSyncAtCron { get; set; } = "00 02 * * *";
+        public string? AutoSyncAt { get; set; } = "00 02 * * *";
 
         public string HeadRef => $"heads/{Branch}";
     }
