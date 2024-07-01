@@ -15,7 +15,7 @@
                     <RadzenIcon Icon="search" />
                 </Start>
                 <ChildContent>
-                    <RadzenTextBox Value="@_filter" @oninput="searchTerm.OnNext" type="search" AutoComplete="false" Placeholder="搜索笔记" />
+                    <RadzenTextBox Value="@_filter" Change="OnFilterChanged" type="search" AutoComplete="false" Placeholder="搜索笔记" />
                 </ChildContent>
             </RadzenFormField>
         </div>
@@ -53,7 +53,6 @@
     private MemoItem? SidebarMemo;
     private MemoItem? Selection => _memoService.SelectedMemo;
 
-    private Subject<ChangeEventArgs> searchTerm = new();
     private IDisposable? subscription;
     private IEnumerable<MemoItem>? memos;
     private string? _filter;
@@ -66,24 +65,6 @@
         SidebarMemo = _memoService.SelectedSidebarMemo;
         memos = SidebarMemo?.Children;
 
-        subscription = searchTerm
-           .Throttle(TimeSpan.FromMilliseconds(350))
-           .Select(e => (string?)e.Value)
-           .Select(v => v?.Trim())
-           .DistinctUntilChanged()
-           .Select(SearchMemo)
-           .Subscribe(ts =>
-           {
-               memos = ts;
-               InvokeAsync(() =>
-               {
-                   if (!(_memoService.SelectedMemo != null && memos != null && memos.Any(m => m.Id == _memoService.SelectedMemo.Id)))
-                   {
-                       _memoService.SetSelectedMemo(memos?.FirstOrDefault());
-                   }
-               });
-           });
-
         base.OnInitialized();
     }
 
@@ -91,15 +72,23 @@
     {
         SidebarMemo = _memoService.SelectedSidebarMemo;
         memos = SidebarMemo?.Children;
-        _filter = null;
-        searchTerm.OnNext(new ChangeEventArgs());
 
-        InvokeAsync(StateHasChanged);
+        _filter = null;
+    }
+
+    void OnFilterChanged(string filter)
+    {
+        _filter = filter;
+        memos = SearchMemo(filter);
+
+        if (!(_memoService.SelectedMemo != null && memos != null && memos.Any(m => m.Id == _memoService.SelectedMemo.Id)))
+        {
+            _memoService.SetSelectedMemo(memos?.FirstOrDefault());
+        }
     }
 
     private IEnumerable<MemoItem>? SearchMemo(string? searchTerm = null)
     {
-        _filter = searchTerm;
         return _memoService.SearchMemo(searchTerm);
     }
 
