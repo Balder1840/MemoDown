@@ -29,6 +29,10 @@
     height: 56px;
 }
 
+.list-search ::deep .rz-form-field {
+    width: 85%;
+}
+
 .list-search ::deep .rz-form-field:hover .rz-form-field-content {
     border: 1px solid var(--rz-base-400);
 }
